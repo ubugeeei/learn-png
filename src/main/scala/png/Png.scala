@@ -90,7 +90,13 @@ object Png:
         .filter(_.chunkType == ChunkType.IDAT)
         .flatMap(_.data)
         .toArray
-      expected = Math.multiplyExact(header.scanlineBytes + 1, header.height)
+      expectedLong = (header.scanlineBytes.toLong + 1) * header.height
+      _ <- Either.cond(
+        expectedLong <= Int.MaxValue,
+        (),
+        InvalidImage("decompressed image exceeds JVM limits")
+      )
+      expected = expectedLong.toInt
       inflated <- Zlib.decompress(compressed, expected)
       _ <- Either.cond(
         inflated.length == expected,
