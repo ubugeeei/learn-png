@@ -11,16 +11,13 @@ explains how to turn it into executable Scala.
 ## Reading path
 
 1. [A map of the format](01-format-map.md)
-2. Binary values and byte order
-3. Chunks and CRC-32
-4. The image model and color types
-5. Scanline filters
-6. Deflate and zlib
-7. Encoding
-8. Decoding and validation
-9. Interlacing with Adam7
-10. Testing a binary format
+2. [Binary values, chunks, and CRC-32](02-binary-and-chunks.md)
+3. [The image model, color types, and IHDR](03-image-and-header.md)
+4. [Scanline filters and zlib](04-filters-and-compression.md)
+5. [Encoding step by step](05-encoding.md)
+6. [Defensive decoding](06-decoding.md)
+7. [Extending the codec with Adam7](07-adam7.md)
+8. [Testing a binary format](08-testing.md)
 
 Each chapter follows the same loop: read the relevant requirement, model its invariants, implement
 the smallest useful unit, and test both valid and hostile input.
-
