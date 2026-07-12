@@ -28,6 +28,22 @@ final class PngSuite extends FunSuite:
       val original = image(width, height)
       assertEquals(Png.encode(original).flatMap(Png.decode), Right(original))
 
+  test("Adam7 images round-trip across dimensions with empty passes"):
+    val options = EncoderOptions(interlaced = true).toOption.get
+    for (width, height) <- List(1 -> 1, 2 -> 7, 8 -> 8, 17 -> 9) do
+      val original = image(width, height)
+      assertEquals(
+        Png.encode(original, options).flatMap(Png.decode),
+        Right(original)
+      )
+
+  test("one zlib stream can be split into many consecutive IDAT chunks"):
+    val options = EncoderOptions(maximumIdatPayload = 1).toOption.get
+    val original = image(8, 8)
+    val bytes = Png.encode(original, options).toOption.get
+    assertEquals(Png.decode(bytes), Right(original))
+    assert(bytes.sliding(4).count(_.sameElements("IDAT".getBytes)) > 1)
+
   test("encoded output is readable by the JDK ImageIO implementation"):
     val original = image(7, 5)
     val bytes = Png.encode(original).toOption.get

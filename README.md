@@ -20,6 +20,5 @@ The book starts at [`docs/README.md`](docs/README.md).
 ## Supported format
 
 The encoder writes lossless, non-interlaced, eight-bit RGBA PNGs. The decoder accepts all five
-standard color types and every legal bit depth, PLTE/tRNS transparency, multiple consecutive IDAT
-chunks, and unknown ancillary chunks. Adam7 interlacing is recognized and reported explicitly as
-unsupported; its implementation path is documented in the book.
+standard color types and every legal bit depth, Adam7 interlacing, PLTE/tRNS transparency, multiple
+consecutive IDAT chunks, and unknown ancillary chunks.

@@ -15,27 +15,67 @@ object Png:
     Vector(137, 80, 78, 71, 13, 10, 26, 10).map(_.toByte)
 
   def encode(image: Image): Either[PngError, Array[Byte]] =
+    encode(image, EncoderOptions.default)
+
+  def encode(
+      image: Image,
+      options: EncoderOptions
+  ): Either[PngError, Array[Byte]] =
     val header = Header(
       image.width,
       image.height,
       8,
-      ColorType.TruecolorAlpha
+      ColorType.TruecolorAlpha,
+      options.interlaced
     ).toOption.get
-    val filtered = ByteArrayOutputStream()
-    var previous = Array.emptyByteArray
-    image.rows.foreach: pixels =>
-      val row = Samples.rgba8Row(pixels)
-      val (filter, bytes) =
-        Filter.choose(row, previous, header.bytesPerPixelForFiltering)
-      filtered.write(filter.code)
-      filtered.write(bytes)
-      previous = row
+    val filtered =
+      if options.interlaced then interlacedScanlines(image, header)
+      else ordinaryScanlines(image, header)
     for
-      compressed <- Zlib.compress(filtered.toByteArray)
+      compressed <- Zlib.compress(filtered, options.compressionLevel)
       ihdr <- Chunk(ChunkType.IHDR, header.bytes)
-      idat <- Chunk(ChunkType.IDAT, compressed)
+      idats <- compressed
+        .grouped(options.maximumIdatPayload)
+        .toVector
+        .foldLeft[Either[PngError, Vector[Chunk]]](Right(Vector.empty)):
+          case (result, payload) =>
+            for chunks <- result; chunk <- Chunk(ChunkType.IDAT, payload)
+            yield chunks :+ chunk
       iend <- Chunk(ChunkType.IEND, Array.emptyByteArray)
-    yield Signature.toArray ++ ihdr.bytes ++ idat.bytes ++ iend.bytes
+    yield Signature.toArray ++ ihdr.bytes ++ idats
+      .flatMap(_.bytes)
+      .toArray ++ iend.bytes
+
+  private def ordinaryScanlines(image: Image, header: Header): Array[Byte] =
+    filteredRows(
+      image.rows.map(Samples.rgba8Row),
+      header.bytesPerPixelForFiltering
+    )
+
+  private def interlacedScanlines(image: Image, header: Header): Array[Byte] =
+    Adam7.passes
+      .filterNot(_.isEmpty(image.width, image.height))
+      .flatMap: pass =>
+        val rows = (0 until pass.height(image.height)).map: passY =>
+          val y = pass.yStart + passY * pass.yStep
+          val pixels = (0 until pass.width(image.width)).map: passX =>
+            image(pass.xStart + passX * pass.xStep, y)
+          Samples.rgba8Row(pixels.toVector)
+        filteredRows(rows.toVector, header.bytesPerPixelForFiltering)
+      .toArray
+
+  private def filteredRows(
+      rows: Vector[Array[Byte]],
+      bytesPerPixel: Int
+  ): Array[Byte] =
+    val output = ByteArrayOutputStream()
+    var previous = Array.emptyByteArray
+    rows.foreach: row =>
+      val (filter, bytes) = Filter.choose(row, previous, bytesPerPixel)
+      output.write(filter.code)
+      output.write(bytes)
+      previous = row
+    output.toByteArray
 
   def decode(input: Array[Byte]): Either[PngError, Image] =
     val cursor = Binary.Cursor(input)
@@ -73,11 +113,6 @@ object Png:
     for
       _ <- validateOrder(chunks)
       header <- Header.parse(chunks.head.data)
-      _ <- Either.cond(
-        !header.interlaced,
-        (),
-        UnsupportedFeature("Adam7 interlacing")
-      )
       transparency = chunks
         .find(_.chunkType == ChunkType.tRNS)
         .fold(Array.emptyByteArray)(_.data)
@@ -90,7 +125,9 @@ object Png:
         .filter(_.chunkType == ChunkType.IDAT)
         .flatMap(_.data)
         .toArray
-      expectedLong = (header.scanlineBytes.toLong + 1) * header.height
+      expectedLong =
+        if header.interlaced then Adam7.decompressedSize(header)
+        else (header.scanlineBytes.toLong + 1) * header.height
       _ <- Either.cond(
         expectedLong <= Int.MaxValue,
         (),
@@ -105,7 +142,10 @@ object Png:
           s"expected $expected decompressed bytes, found ${inflated.length}"
         )
       )
-      pixels <- decodeScanlines(inflated, header, palette, transparency)
+      pixels <-
+        if header.interlaced then
+          decodeInterlaced(inflated, header, palette, transparency)
+        else decodeScanlines(inflated, header, palette, transparency)
       image <- Image(header.width, header.height, pixels)
     yield image
 
@@ -135,6 +175,81 @@ object Png:
             decoded <- Samples.decodeRow(
               row,
               header.width,
+              header,
+              palette,
+              transparency
+            )
+          yield (pixels ++ decoded, row)
+      .map(_._1)
+
+  private def decodeInterlaced(
+      data: Array[Byte],
+      header: Header,
+      palette: Vector[Rgba],
+      transparency: Array[Byte]
+  ): Either[PngError, Vector[Rgba]] =
+    val cursor = Binary.Cursor(data)
+    val initial = Vector.fill[Option[Rgba]](header.width * header.height)(None)
+    Adam7.passes
+      .foldLeft[Either[PngError, Vector[Option[Rgba]]]](Right(initial)):
+        case (result, pass) if pass.isEmpty(header.width, header.height) =>
+          result
+        case (result, pass) =>
+          val passWidth = pass.width(header.width)
+          val passHeight = pass.height(header.height)
+          val rowBytes = Adam7.scanlineBytes(passWidth, header.bitsPerPixel)
+          for
+            raster <- result
+            decoded <- decodePass(
+              cursor,
+              passWidth,
+              passHeight,
+              rowBytes,
+              header,
+              palette,
+              transparency
+            )
+            coordinates = pass.coordinates(header.width, header.height).toVector
+            placed = coordinates
+              .zip(decoded)
+              .foldLeft(raster):
+                case (pixels, ((x, y), pixel)) =>
+                  pixels.updated(y * header.width + x, Some(pixel))
+          yield placed
+      .flatMap: raster =>
+        raster.foldLeft[Either[PngError, Vector[Rgba]]](Right(Vector.empty)):
+          case (result, Some(pixel)) => result.map(_ :+ pixel)
+          case (_, None)             =>
+            Left(InvalidImage("Adam7 passes did not cover every pixel"))
+
+  private def decodePass(
+      cursor: Binary.Cursor,
+      width: Int,
+      height: Int,
+      rowBytes: Int,
+      header: Header,
+      palette: Vector[Rgba],
+      transparency: Array[Byte]
+  ): Either[PngError, Vector[Rgba]] =
+    (0 until height)
+      .foldLeft[Either[PngError, (Vector[Rgba], Array[Byte])]](
+        Right(Vector.empty -> Array.emptyByteArray)
+      ):
+        case (result, _) =>
+          for
+            state <- result
+            (pixels, previous) = state
+            filterCode <- cursor.uint8
+            filter <- Filter.fromCode(filterCode)
+            encoded <- cursor.take(rowBytes)
+            row = filter.decode(
+              encoded,
+              previous,
+              header.bytesPerPixelForFiltering
+            )
+            decoded <- Samples.decodeRow(
+              row,
+              width,
               header,
               palette,
               transparency

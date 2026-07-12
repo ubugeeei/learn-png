@@ -27,9 +27,5 @@ missing entries implicitly opaque. For grayscale and truecolor it names one full
 sample or sample triple. Color types already carrying alpha may not use it; stricter ancillary
 validation is a natural extension exercise.
 
-## Current boundary
-
-Adam7 interlacing is recognized in IHDR but intentionally returned as `UnsupportedFeature` rather
-than decoded incorrectly. The pass geometry is described in the next chapter as the main advanced
-extension. The codec otherwise accepts all legal non-interlaced color-type/bit-depth combinations.
-
+Adam7 images follow the same validation pipeline, but compute their decompressed bound from seven
+pass geometries and reset filter history between passes. The next chapter derives that algorithm.
