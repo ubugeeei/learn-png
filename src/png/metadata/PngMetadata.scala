@@ -186,6 +186,10 @@ object PngMetadata:
     ChunkType.gAMA,
     ChunkType.sRGB,
     ChunkType.pHYs,
-    ChunkType.tEXt
+    ChunkType.tEXt,
+    ChunkType.zTXt,
+    ChunkType.iTXt,
+    ChunkType.eXIf,
+    ChunkType.tIME
   )
   private def isUnknownSafe(kind: ChunkType): Boolean = kind.isAncillary && kind.isSafeToCopy && !Known(kind)

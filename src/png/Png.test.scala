@@ -1,5 +1,6 @@
 package png
 
+import java.time.LocalDateTime
 import munit.FunSuite
 
 final class PngSuite extends FunSuite:
@@ -42,6 +43,17 @@ final class PngSuite extends FunSuite:
         text = Vector(TextEntry("Title", "Round trip").toOption.get)
       ).toOption.get
     val document = PngDocument(image(3, 2), metadata)
+    assertEquals(Png.encode(document).flatMap(Png.decodeDocument), Right(document))
+
+  test("document API preserves international text, Exif, and modification time"):
+    val extended = ExtendedMetadata(
+      internationalText = Vector(
+        InternationalText("Title", "ja", "題名", "PNG の実装").toOption.get
+      ),
+      modificationTime = Some(LocalDateTime.of(2026, 7, 12, 12, 30, 0)),
+      exif = Some(ExifProfile(Array[Byte](73, 73, 42, 0)).toOption.get)
+    )
+    val document = PngDocument(image(2, 2), extendedMetadata = extended)
     assertEquals(Png.encode(document).flatMap(Png.decodeDocument), Right(document))
 
   test("encoded output is readable by the JDK ImageIO implementation"):

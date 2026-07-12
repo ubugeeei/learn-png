@@ -41,9 +41,11 @@ private[png] object Codec:
     for
       imageBytes <- encode(document.image, options)
       metadataChunks <- PngMetadata.chunks(document.metadata)
+      extendedChunks <- ExtendedMetadata.chunks(document.extendedMetadata)
     yield
       val afterHeader = Signature.length + 12 + 13
-      imageBytes.take(afterHeader) ++ metadataChunks.flatMap(_.bytes) ++ imageBytes.drop(afterHeader)
+      imageBytes.take(afterHeader) ++ (metadataChunks ++ extendedChunks).flatMap(_.bytes) ++
+        imageBytes.drop(afterHeader)
 
   def encode(image: Image, options: EncoderOptions): Either[PngError, Array[Byte]] =
     val header =
@@ -104,7 +106,8 @@ private[png] object Codec:
       _ <- cursor.take(Signature.length)
       chunks <- parseChunks(cursor, options)
       metadata <- PngMetadata.decode(chunks)
-    yield PngDocument(image, metadata)
+      extended <- ExtendedMetadata.decode(chunks)
+    yield PngDocument(image, metadata, extended)
 
   def decode(input: Array[Byte], options: DecoderOptions): Either[PngError, Image] =
     val cursor = Binary.Cursor(input)
