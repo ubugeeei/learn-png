@@ -1,0 +1,12 @@
+{
+  "name": "learn-png-book",
+  "private": true,
+  "scripts": {
+    "book:dev": "vitepress dev docs",
+    "book:build": "vitepress build docs",
+    "book:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "1.6.4"
+  }
+}

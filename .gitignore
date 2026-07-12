@@ -3,6 +3,8 @@
 .idea/
 .metals/
 target/
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 *.png
 !.github/fixtures/*.png
-
