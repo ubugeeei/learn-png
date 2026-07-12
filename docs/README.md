@@ -8,16 +8,38 @@ PNG is standardized by the W3C in the
 links to the normative section it implements. The specification is the authority; this book
 explains how to turn it into executable Scala.
 
-## Reading path
+The first version of this repository was a codec accompanied by eight short notes. This edition is
+being rebuilt as an implementation book: self-contained background, small working increments,
+normative links, executable tests, and a path from one red pixel to a hardened codec.
 
-1. [A map of the format](01-format-map.md)
-2. [Binary values, chunks, and CRC-32](02-binary-and-chunks.md)
-3. [The image model, color types, and IHDR](03-image-and-header.md)
-4. [Scanline filters and zlib](04-filters-and-compression.md)
-5. [Encoding step by step](05-encoding.md)
-6. [Defensive decoding](06-decoding.md)
-7. [Extending the codec with Adam7](07-adam7.md)
-8. [Testing a binary format](08-testing.md)
+## Part 0 — About the book
+
+1. [Why build PNG?](00-about/01-purpose.md)
+2. [How to use this book](00-about/02-how-to-read.md)
+
+## Part 1 — Foundations
+
+3. [Pixels, samples, and scanlines](01-foundations/01-pixels-samples-scanlines.md)
+4. [Bits, signed bytes, and endianness](01-foundations/02-bits-bytes-and-endianness.md)
+
+## Part 2 — The smallest working PNG
+
+5. [Build a 1×1 PNG by hand](02-minimal/01-a-png-by-hand.md)
+
+## Part 3 — Designing the codec in Scala
+
+6. [Types as format rules](03-scala-design/01-types-as-format-rules.md)
+
+## Original implementation notes
+
+7. [A map of the format](01-format-map.md)
+8. [Binary values, chunks, and CRC-32](02-binary-and-chunks.md)
+9. [The image model, color types, and IHDR](03-image-and-header.md)
+10. [Scanline filters and zlib](04-filters-and-compression.md)
+11. [Encoding step by step](05-encoding.md)
+12. [Defensive decoding](06-decoding.md)
+13. [Adam7](07-adam7.md)
+14. [Testing a binary format](08-testing.md)
 
 Each chapter follows the same loop: read the relevant requirement, model its invariants, implement
 the smallest useful unit, and test both valid and hostile input.
