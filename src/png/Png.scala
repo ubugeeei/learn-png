@@ -51,6 +51,13 @@ object Png:
   def encode16(image: Image16, options: EncoderOptions): Either[PngError, Array[Byte]] =
     Codec16.encode(image, options)
 
+  /** Decode and composite every APNG frame into a lossless 16-bit canvas. */
+  def decodeAnimation(bytes: Array[Byte]): Either[PngError, PngAnimation] =
+    decodeAnimation(bytes, DecoderOptions.default)
+
+  def decodeAnimation(bytes: Array[Byte], options: DecoderOptions): Either[PngError, PngAnimation] =
+    AnimationDecoder.decode(bytes, options)
+
   /** Decode pixels plus color, density, text, and safe-to-copy metadata. */
   def decodeDocument(bytes: Array[Byte]): Either[PngError, PngDocument] = decodeDocument(
     bytes,
