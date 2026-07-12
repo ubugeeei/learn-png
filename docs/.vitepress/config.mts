@@ -61,6 +61,12 @@ export default withMermaid(defineConfig({
           { text: "Metadata and transcoding", link: "/08-production/01-metadata-and-transcoding" },
           { text: "I/O and resource contracts", link: "/08-production/02-io-and-resource-contracts" }
         ]
+      },
+      {
+        text: "Conformance",
+        items: [
+          { text: "Coverage matrix", link: "/09-conformance/01-coverage-matrix" }
+        ]
       }
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei/learn-png" }],

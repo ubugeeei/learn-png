@@ -54,6 +54,10 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 12. [Metadata without silent data loss](08-production/01-metadata-and-transcoding.md)
 13. [I/O and resource contracts](08-production/02-io-and-resource-contracts.md)
 
+## Part 9 — Conformance
+
+14. [PNG Third Edition coverage matrix](09-conformance/01-coverage-matrix.md)
+
 ## Original implementation notes
 
 12. [A map of the format](01-format-map.md)
