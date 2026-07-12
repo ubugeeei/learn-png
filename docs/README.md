@@ -44,6 +44,7 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 ## Part 6 — Decoding
 
 10. [From bytes to pixels](06-decoder/01-from-bytes-to-pixels.md)
+11. [Keeping all 16 bits](06-decoder/02-sixteen-bit-fidelity.md)
 
 ## Part 7 — Interlacing
 

@@ -70,9 +70,9 @@ errors.
 public representation: `Vector[Rgba]`. The rest of an application does not need branches for five
 PNG color types.
 
-This choice loses low eight bits from 16-bit input. That is appropriate for this codec's declared
-RGBA8 public model, but a preservation-oriented editor would instead parameterize `Image` by sample
-depth or expose a 16-bit raster.
+The RGBA8 API intentionally reduces sixteen-bit input for display-oriented callers. Preservation
+uses `Png.decode16`, which exposes `Image16` and retains every low-order bit; the next chapter builds
+that path step by step.
 
 ## File errors belong in the value channel
 

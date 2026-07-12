@@ -33,7 +33,7 @@ Status meanings:
 | Truecolor 8 | ✅ | ❌ | normalized to RGBA8; encoder does not select RGB automatically |
 | Grayscale+alpha 8 | ✅ | ❌ | normalized to RGBA8 |
 | Truecolor+alpha 8 | ✅ | ✅ | default public raster and encoder |
-| 16-bit samples | 🟡 | ❌ | decoded by dropping low 8 bits; not PNG-lossless |
+| 16-bit samples | ✅ | 🟡 | `decode16` preserves all bits; `encode16` emits RGBA16 only |
 | tRNS | ✅ | ❌ | all permitted color types decode; strict length/type validation |
 | Filters 0–4 | ✅ | ✅ | known cases plus generated inverse-law testing |
 | zlib/Deflate envelope | ✅ | ✅ | completion, dictionary, trailing data, and limits checked |

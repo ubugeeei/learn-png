@@ -49,7 +49,10 @@ export default withMermaid(defineConfig({
       },
       {
         text: "Decoder",
-        items: [{ text: "Bytes to pixels", link: "/06-decoder/01-from-bytes-to-pixels" }]
+        items: [
+          { text: "Bytes to pixels", link: "/06-decoder/01-from-bytes-to-pixels" },
+          { text: "Keeping all 16 bits", link: "/06-decoder/02-sixteen-bit-fidelity" }
+        ]
       },
       {
         text: "Interlacing",
