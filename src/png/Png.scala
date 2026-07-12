@@ -58,6 +58,15 @@ object Png:
   def decodeAnimation(bytes: Array[Byte], options: DecoderOptions): Either[PngError, PngAnimation] =
     AnimationDecoder.decode(bytes, options)
 
+  /** Encode an RGBA16 APNG whose first frame is also the static fallback image. */
+  def encodeAnimation(animation: AnimationSource): Either[PngError, Array[Byte]] =
+    encodeAnimation(animation, EncoderOptions.default)
+
+  def encodeAnimation(
+      animation: AnimationSource,
+      options: EncoderOptions
+  ): Either[PngError, Array[Byte]] = AnimationEncoder.encode(animation, options)
+
   /** Decode pixels plus color, density, text, and safe-to-copy metadata. */
   def decodeDocument(bytes: Array[Byte]): Either[PngError, PngDocument] = decodeDocument(
     bytes,
