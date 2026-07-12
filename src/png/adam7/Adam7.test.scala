@@ -1,8 +1,11 @@
 package png
 
 import munit.FunSuite
+import munit.ScalaCheckSuite
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
 
-final class Adam7Suite extends FunSuite:
+final class Adam7Suite extends FunSuite with ScalaCheckSuite:
   test("passes cover every coordinate exactly once"):
     for
       width <- 1 to 17;
@@ -33,3 +36,18 @@ final class Adam7Suite extends FunSuite:
       .map: pass =>
         (Adam7.scanlineBytes(pass.width(8), 32) + 1) * pass.height(8)
     assertEquals(Adam7.decompressedSize(header), manual.sum.toLong)
+
+  property("seven passes partition every generated positive canvas"):
+    val dimension = Gen.choose(1, 256)
+
+    forAll(dimension, dimension): (width, height) =>
+      val coordinates = Adam7.passes.iterator.flatMap(_.coordinates(width, height)).toVector
+      coordinates.length == width * height &&
+      coordinates.distinct.length == coordinates.length &&
+      coordinates.forall: (x, y) =>
+        x >= 0 && x < width && y >= 0 && y < height
+
+  property("pass scanline byte counts are ceiling divisions"):
+    forAll(Gen.choose(0, 8192), Gen.choose(1, 64)): (width, bitsPerPixel) =>
+      val expected = (width.toLong * bitsPerPixel + 7) / 8
+      Adam7.scanlineBytes(width, bitsPerPixel) == expected
