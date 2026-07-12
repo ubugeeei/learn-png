@@ -84,9 +84,9 @@ Status meanings:
 | Typed errors and configurable limits | ✅ | file, chunks, dimensions, pixels, inflation |
 | Caller-owned stream lifetime | ✅ | consume/flush, never close |
 | Transactional path replacement | ✅ | forced temporary sibling and atomic move preference |
-| Property-based tests | 🟡 | filters and chunks; sample packing and Adam7 byte streams need generators |
+| Property-based tests | 🟡 | filters, Adam7 geometry, and RGBA16 codec; metadata/APNG generators remain |
 | Independent decoder interoperability | 🟡 | Java ImageIO full-raster checks for directly comparable samples |
-| PNGSuite corpus | 🟡 | all 15 basic color/depth fixtures; larger positive and invalid sets remain |
+| PNGSuite corpus | 🟡 | 15 basic fixtures plus derived CRC/truncation/trailing-data negatives |
 | Fuzzing | ❌ | coverage-guided fuzz target required |
 | Benchmarks | ❌ | throughput and allocation baselines required |
 | Published binary/API compatibility | ❌ | no artifact versioning or MiMa policy yet |

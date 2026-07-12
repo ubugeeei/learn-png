@@ -2,6 +2,18 @@
 
 Binary codec tests need several independent oracles.
 
+An **oracle** is simply another way to decide what the correct answer is. One oracle is a known byte
+sequence, another is an independent decoder, and another is a mathematical property that must hold
+for every input.
+
+```mermaid
+flowchart LR
+  Examples["Known examples"] --> Confidence["Codec confidence"]
+  Properties["Generated properties"] --> Confidence
+  Corpus["Independent corpus"] --> Confidence
+  Damage["Deliberately damaged files"] --> Confidence
+```
+
 ## Layer tests
 
 Test byte order, cursor truncation, chunk-type validation, a known CRC, every filter, header
@@ -11,6 +23,17 @@ combinations, palette bounds, and image invariants separately. A failure then po
 
 For valid images, assert `decode(encode(image)) == image` across dimensions and channel patterns.
 Round trips are broad but not sufficient: an encoder and decoder can agree on the same wrong format.
+
+## Generate inputs instead of guessing examples
+
+A property test describes a rule and lets ScalaCheck generate many inputs. The suite generates
+canvas sizes and proves that the seven Adam7 passes cover every coordinate exactly once. It also
+generates complete 16-bit RGBA rasters, toggles interlacing, splits compressed data into 17-byte
+IDAT chunks, and checks that every low-order bit survives an encode/decode round trip.
+
+This is stronger than writing ten attractive sample images because edge dimensions and channel
+values are selected without depending on a developer's intuition. When a generated case fails,
+ScalaCheck shrinks it toward a smaller counterexample that is easier to understand.
 
 ## Independent interoperability
 
@@ -48,6 +71,11 @@ Starting from a valid file, mutate one invariant at a time:
 
 Assert the error category and relevant metadata, not only `isLeft`. This makes error quality part of
 the API contract.
+
+`NegativeCorpusSuite` applies representative truncations, IHDR corruption, and trailing bytes to
+every basic PngSuite color/depth fixture. The distinction matters: a **positive corpus** asks whether
+valid files decode, while a **negative corpus** asks whether invalid files are rejected rather than
+silently misinterpreted.
 
 ## Final checklist
 
