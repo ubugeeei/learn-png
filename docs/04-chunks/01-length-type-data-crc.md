@@ -5,11 +5,27 @@
 Parse one physical chunk, reproduce it byte for byte, and reject corruption before interpreting
 the payload.
 
+## New words in this chapter
+
+- **chunk**: one labeled section of a PNG file;
+- **payload**: the data inside that section;
+- **CRC**: a calculated check number used to detect accidental changes;
+- **framing**: the fields that mark where a section starts and ends.
+
 After the signature, PNG is a sequence of chunks. Every chunk has the same framing, specified by
 [PNG §5.3](https://www.w3.org/TR/png-3/#5Chunk-layout):
 
 ```text
 length: 4 bytes | type: 4 bytes | data: length bytes | CRC: 4 bytes
+```
+
+```mermaid
+flowchart LR
+  L["length\n4 bytes"] --> T["type\n4 ASCII letters"]
+  T --> D["data\n'length' bytes"]
+  D --> C["CRC\n4 bytes"]
+  T -. "CRC covers" .-> C
+  D -. "CRC covers" .-> C
 ```
 
 `length` counts only data. It does not count the type or CRC. The legal PNG maximum is `2^31 - 1`,
@@ -72,4 +88,3 @@ This proves length, type encoding, empty data, and CRC against an external known
 2. Flip each of the four type bytes and confirm CRC failure.
 3. Implement CRC-32 from the sample code in the specification and compare it with `CRC32` for 1,000
    deterministic random byte arrays.
-

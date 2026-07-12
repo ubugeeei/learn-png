@@ -4,6 +4,14 @@
 
 Read and write PNG integers without accidental sign extension or byte reversal.
 
+## New words in this chapter
+
+- **bit**: one 0-or-1 digit;
+- **byte**: a group of eight bits;
+- **unsigned**: interpreting stored bits as zero or a positive number;
+- **big-endian**: placing the most significant byte first;
+- **cursor**: a small reader that remembers the current position in an array.
+
 PNG's [integer representation](https://www.w3.org/TR/png-3/#7Integers-and-byte-order) is unsigned
 and big-endian. The JVM gives us signed `Byte`, `Int`, and `Long`; signedness is a property of the
 operation, not of the eight stored bits.
@@ -52,4 +60,3 @@ invariant so every higher-level parser benefits automatically.
 1. Implement `uint16` reading and test `0x0000`, `0x7fff`, `0x8000`, and `0xffff`.
 2. Add a test proving a failed `take` leaves `offset` unchanged.
 3. Explain why a negative `count` should be rejected even if `remaining < count` is false.
-

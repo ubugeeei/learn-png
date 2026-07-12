@@ -18,12 +18,29 @@ Png.write(path, image)
 Caller-owned streams are never closed. Output streams are flushed after success. The bounded reader
 checks total bytes after every buffer and stops immediately after crossing `maximumFileBytes`.
 
+```mermaid
+flowchart LR
+  Caller["caller owns stream"] --> Codec["Png.read / Png.write"]
+  Codec --> Consume["consume or write bytes"]
+  Consume --> Return["return Either"]
+  Return --> Caller
+  Codec -. "never closes" .-> Caller
+```
+
 ## Transactional path writes
 
 Writing directly to the destination can leave a truncated file if the process or disk fails.
 `SafeFiles` writes to a temporary sibling, forces bytes through a file channel, then moves it over
 the destination. A sibling stays on the same filesystem. Atomic move is preferred; same-filesystem
 replacement is the explicit fallback. A `finally` block removes temporary files on failure.
+
+```mermaid
+flowchart LR
+  Encode["encoded bytes"] --> Temp["temporary sibling"]
+  Temp --> Force["force to storage"]
+  Force --> Move["atomic replace if supported"]
+  Move --> Destination["destination PNG"]
+```
 
 ## Limits are caller policy
 
@@ -37,4 +54,3 @@ The inflater accepts exactly one complete zlib stream. It rejects truncation, pr
 output beyond the derived bound, extra compressed bytes, and a no-progress state. Catching only
 `DataFormatException` is insufficient because incomplete or concatenated inputs require explicit
 inflater-state checks.
-

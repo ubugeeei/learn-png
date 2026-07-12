@@ -4,6 +4,13 @@
 
 Compose validated primitives into a decoder without losing the precision of their errors.
 
+## New words in this chapter
+
+- **validation**: checking a rule before trusting a value;
+- **inflate**: restore compressed zlib data to its original bytes;
+- **resource limit**: a caller-selected boundary on memory, dimensions, or input size;
+- **normalized**: converted from several file representations into one public representation.
+
 The public entry point is [`Png.decode`](https://github.com/ubugeeei/learn-png/blob/main/src/png/Png.scala). It is deliberately a thin
 orchestrator. Each stage either produces a stronger value or returns a typed failure:
 
@@ -17,6 +24,22 @@ Array[Byte]
   -> reconstructed rows
   -> normalized RGBA samples
   -> Image
+```
+
+```mermaid
+flowchart TD
+  Bytes["untrusted bytes"] --> Signature{"signature matches?"}
+  Signature -- no --> SignatureError["InvalidSignature"]
+  Signature -- yes --> Chunks{"length + CRC valid?"}
+  Chunks -- no --> ChunkError["typed chunk error"]
+  Chunks -- yes --> Order{"order valid?"}
+  Order -- no --> OrderError["InvalidChunkOrder"]
+  Order -- yes --> Limits{"resource limits pass?"}
+  Limits -- no --> LimitError["ResourceLimit"]
+  Limits -- yes --> Inflate["bounded zlib inflate"]
+  Inflate --> Rows["reverse filters"]
+  Rows --> Pixels["unpack samples"]
+  Pixels --> Image["immutable Image"]
 ```
 
 ## Validate before allocation

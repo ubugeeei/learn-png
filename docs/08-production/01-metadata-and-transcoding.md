@@ -19,6 +19,17 @@ val document: Either[PngError, PngDocument] = Png.decodeDocument(bytes)
 gAMA, sRGB rendering intent, pHYs density, tEXt entries, and unknown ancillary chunks whose
 safe-to-copy bit is set.
 
+```mermaid
+flowchart TD
+  Document["PngDocument"] --> Image["Image: pixels"]
+  Document --> Metadata["PngMetadata"]
+  Metadata --> Gamma["gAMA"]
+  Metadata --> SRGB["sRGB intent"]
+  Metadata --> Density["pHYs density"]
+  Metadata --> Text["tEXt entries"]
+  Metadata --> Preserved["unknown safe-to-copy chunks"]
+```
+
 Each type has a smart constructor. `TextEntry` enforces the 1–79 byte keyword limit, Latin-1, NUL
 exclusion, and spacing rules from
 [PNG §11.3.4.3](https://www.w3.org/TR/png-3/#11tEXt). `PixelDensity` retains the unsigned 32-bit
@@ -42,4 +53,3 @@ chunks fail decoding because their semantics may affect pixels.
 Compressed and international text, ICC profiles, chromaticities, EXIF, significant bits, suggested
 palettes, and timestamps still need typed models. The API therefore documents its supported set
 instead of claiming byte-for-byte preservation.
-

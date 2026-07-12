@@ -17,6 +17,14 @@ A chunk is a length-prefixed record:
 4-byte length | 4-byte type | length bytes of data | 4-byte CRC
 ```
 
+```mermaid
+flowchart LR
+  Signature["8-byte signature"] --> IHDR["IHDR: image basics"]
+  IHDR --> Ancillary["optional metadata"]
+  Ancillary --> IDAT["IDAT: compressed rows"]
+  IDAT --> IEND["IEND: end marker"]
+```
+
 All multi-byte integers use network byte order (most significant byte first). The CRC protects the
 type and data, but not the length. These tiny details are exactly where a codec should encode
 knowledge in types and constructors instead of scattering checks through parsing code.
@@ -34,5 +42,14 @@ Image -> scanlines -> filters -> zlib -> chunks -> bytes
 bytes -> chunks -> zlib -> filters -> samples -> Image
 ```
 
-Keeping each arrow independently testable is the main design decision in this project.
+```mermaid
+flowchart LR
+  Image --> Samples --> Filters --> Zlib --> Chunks --> File["PNG bytes"]
+  File -. decode .-> Chunks
+  Chunks -.-> Zlib
+  Zlib -.-> Filters
+  Filters -.-> Samples
+  Samples -.-> Image
+```
 
+Keeping each arrow independently testable is the main design decision in this project.

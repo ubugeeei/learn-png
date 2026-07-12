@@ -7,6 +7,27 @@ Decode and encode seven sparse images while reusing ordinary row, filter, and sa
 Adam7 progressively fills a grid. The normative diagram is in
 [PNG §8.2](https://www.w3.org/TR/png-3/#8Interlace). Represent each pass by start and step:
 
+```text
+pass numbers in an 8 × 8 tile
+
+1 6 4 6 2 6 4 6
+7 7 7 7 7 7 7 7
+5 6 5 6 5 6 5 6
+7 7 7 7 7 7 7 7
+3 6 4 6 3 6 4 6
+7 7 7 7 7 7 7 7
+5 6 5 6 5 6 5 6
+7 7 7 7 7 7 7 7
+```
+
+```mermaid
+flowchart LR
+  Full["full pixel grid"] --> Gather["gather sparse pass coordinates"]
+  Gather --> PassRows["small pass scanlines"]
+  PassRows --> Filter["filter history resets"]
+  Filter --> Stream["append to compressed stream"]
+```
+
 ```scala
 Pass(number, xStart, yStart, xStep, yStep)
 ```
@@ -70,4 +91,3 @@ other implementation.
 1. Print a 16×16 grid labeled with pass numbers using `Pass.coordinates`.
 2. Prove the 1×1 expected pass extents by hand before looking at `Adam7.test.scala`.
 3. Feed an Adam7 file emitted by this encoder into ImageIO and compare every ARGB pixel.
-

@@ -4,6 +4,13 @@
 
 Implement all five filters from one predictor equation and prove reversal for arbitrary byte rows.
 
+## New words in this chapter
+
+- **filter**: a reversible transformation applied before compression;
+- **predictor**: a guess calculated from nearby bytes;
+- **modulo 256**: keep only the remainder from division by 256, matching one byte;
+- **bpp**: the number of bytes needed to refer to the previous complete pixel.
+
 Deflate finds repeated byte patterns. Adjacent image pixels often change gradually but their raw
 channel values may be large and varied. PNG transforms each byte into the difference from a
 prediction. Flat regions then contain many zeros and small repeated differences.
@@ -22,6 +29,17 @@ The five predictors are specified by [PNG §9.2](https://www.w3.org/TR/png-3/#9F
 - Up: byte at the same position in the previous row;
 - Average: floor of `(left + up) / 2`;
 - Paeth: choose left, up, or upper-left nearest to `left + up - upperLeft`.
+
+```mermaid
+flowchart TB
+  UL["upper-left"] --- U["up"]
+  U --- X["current byte x"]
+  UL --- L["left"]
+  L --- X
+```
+
+When decoding, `left` is already reconstructed in the current row. `up` and `upper-left` come from
+the previous reconstructed row.
 
 ## The crucial asymmetry
 
@@ -73,4 +91,3 @@ still serve as independent checks.
 1. Intentionally decode Sub from the filtered left byte and find the smallest failing row.
 2. Compare compressed sizes produced by always-None and adaptive selection for a gradient image.
 3. Add a strategy enum allowing None-only, fixed filter, and adaptive encoding.
-
