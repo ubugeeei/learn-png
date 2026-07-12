@@ -36,6 +36,9 @@ object ChunkType:
   val bKGD: ChunkType = "bKGD"
   val hIST: ChunkType = "hIST"
   val sPLT: ChunkType = "sPLT"
+  val acTL: ChunkType = "acTL"
+  val fcTL: ChunkType = "fcTL"
+  val fdAT: ChunkType = "fdAT"
 
   def fromString(value: String): Either[PngError, ChunkType] =
     if value.length != 4 then Left(InvalidChunkType("must contain exactly four letters"))
