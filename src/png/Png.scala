@@ -7,8 +7,8 @@ import png.PngError.*
 
 /** Dependency-free PNG encoder and decoder.
   *
-  * Encoding produces non-interlaced 8-bit RGBA PNGs. Decoding accepts every
-  * standard color type and bit depth in non-interlaced PNGs, including palettes
+  * Encoding produces 8-bit RGBA PNGs with optional Adam7 interlacing. Decoding
+  * accepts every standard color type and bit depth, including Adam7, palettes,
   * and `tRNS`. The chunk sequence is checked against
   * [[https://www.w3.org/TR/png-3/#5ChunkOrdering PNG §5.6]].
   */

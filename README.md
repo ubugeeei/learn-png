@@ -41,10 +41,17 @@ scala-cli test .
 scala-cli fmt .
 ```
 
+Run the book locally with navigation and search:
+
+```console
+npm ci
+npm run book:dev
+```
+
 The book starts at [`docs/README.md`](docs/README.md).
 
 ## Supported format
 
-The encoder writes lossless, non-interlaced, eight-bit RGBA PNGs. The decoder accepts all five
+The encoder writes lossless eight-bit RGBA PNGs, optionally with Adam7. The decoder accepts all five
 standard color types and every legal bit depth, Adam7 interlacing, PLTE/tRNS transparency, multiple
 consecutive IDAT chunks, and unknown ancillary chunks.
