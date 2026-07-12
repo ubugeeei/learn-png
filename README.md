@@ -39,6 +39,7 @@ Install [Scala CLI](https://scala-cli.virtuslab.org/), then run:
 ```console
 scala-cli test .
 scala-cli fmt .
+scala-cli run . --main-class png.PngBenchmark -- --quick
 ```
 
 Run the book locally with navigation and search:

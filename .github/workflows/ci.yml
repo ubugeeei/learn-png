@@ -18,6 +18,7 @@ jobs:
           power: true
       - run: scala-cli fmt --check .
       - run: scala-cli test .
+      - run: scala-cli run . --main-class png.PngBenchmark -- --quick
   book:
     runs-on: ubuntu-latest
     steps:
