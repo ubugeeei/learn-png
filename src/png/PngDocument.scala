@@ -8,5 +8,6 @@ package png
 final case class PngDocument(
     image: Image,
     metadata: PngMetadata = PngMetadata.empty,
-    extendedMetadata: ExtendedMetadata = ExtendedMetadata.empty
+    extendedMetadata: ExtendedMetadata = ExtendedMetadata.empty,
+    colorMetadata: ColorMetadata = ColorMetadata.empty
 )

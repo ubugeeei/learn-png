@@ -56,6 +56,20 @@ final class PngSuite extends FunSuite:
     val document = PngDocument(image(2, 2), extendedMetadata = extended)
     assertEquals(Png.encode(document).flatMap(Png.decodeDocument), Right(document))
 
+  test("document API preserves color management metadata"):
+    val header = Header(1, 1, 8, ColorType.TruecolorAlpha).toOption.get
+    val point = Chromaticity(0.3127, 0.3290).toOption.get
+    val color = ColorMetadata(
+      Some(Chromaticities(point, point, point, point)),
+      Some(IccProfile("Profile", Array[Byte](1, 2, 3)).toOption.get),
+      Some(SignificantBits(Vector(8, 8, 8, 8), header).toOption.get),
+      Some(CodingIndependentCodePoints(1, 13, 0, true)),
+      Some(MasteringDisplayVolume((1, 2), (3, 4), (5, 6), (7, 8), 1000, 1)),
+      Some(ContentLightLevel(1000, 400))
+    )
+    val document = PngDocument(image(1, 1), colorMetadata = color)
+    assertEquals(Png.encode(document).flatMap(Png.decodeDocument), Right(document))
+
   test("encoded output is readable by the JDK ImageIO implementation"):
     val original = image(7, 5)
     val bytes = Png.encode(original).toOption.get
