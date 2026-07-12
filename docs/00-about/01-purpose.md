@@ -1,14 +1,18 @@
 # Why Build PNG?
 
+If words such as “byte” or “pixel” are new, begin with
+[An image is a grid of numbers](00-no-prerequisites.md). This chapter describes the destination and
+therefore mentions features that later chapters explain one at a time.
+
 This is not primarily a book about calling an image library. It is a book about turning a binary
 standard into a small, trustworthy program.
 
 By the end, you should be able to:
 
-- explain a PNG datastream from its first signature byte to IEND;
+- explain a PNG file from its fixed opening bytes to its end marker;
 - derive row sizes for every legal color type and bit depth;
 - implement CRC-32, all five filters, packed samples, palettes, transparency, and Adam7;
-- recognize where zlib ends and PNG begins;
+- explain which part belongs to PNG and which part belongs to its compression library;
 - design a decoder that treats hostile input as data rather than as exceptional chaos;
 - use Scala 3 types to make invalid states difficult to represent;
 - read the normative [PNG Third Edition](https://www.w3.org/TR/png-3/) without being intimidated.
@@ -53,4 +57,3 @@ Every milestone leaves the program in a working state:
 12. expose a practical API and command-line tool.
 
 At no point should you need hundreds of unfinished lines before seeing a result.
-

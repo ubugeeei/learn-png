@@ -14,8 +14,10 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 
 ## Part 0 — About the book
 
-1. [Why build PNG?](00-about/01-purpose.md)
-2. [How to use this book](00-about/02-how-to-read.md)
+1. [Start here: no prerequisites](00-about/00-no-prerequisites.md)
+2. [Why build PNG?](00-about/01-purpose.md)
+3. [How to use this book](00-about/02-how-to-read.md)
+4. [Glossary in plain language](00-about/03-glossary.md)
 
 ## Part 1 — Foundations
 

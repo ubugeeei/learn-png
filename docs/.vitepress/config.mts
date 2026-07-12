@@ -1,6 +1,7 @@
 import { defineConfig } from "vitepress";
+import { withMermaid } from "vitepress-plugin-mermaid";
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: "learn-png",
   description: "Build a PNG codec in Scala 3, step by step",
   cleanUrls: true,
@@ -14,8 +15,10 @@ export default defineConfig({
       {
         text: "About",
         items: [
+          { text: "Start here", link: "/00-about/00-no-prerequisites" },
           { text: "Why build PNG?", link: "/00-about/01-purpose" },
-          { text: "How to read", link: "/00-about/02-how-to-read" }
+          { text: "How to read", link: "/00-about/02-how-to-read" },
+          { text: "Glossary", link: "/00-about/03-glossary" }
         ]
       },
       {
@@ -65,4 +68,4 @@ export default defineConfig({
     outline: { level: [2, 3] },
     footer: { message: "Learn the format by building it." }
   }
-});
+}));
