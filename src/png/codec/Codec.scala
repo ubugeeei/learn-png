@@ -32,8 +32,7 @@ private[png] object Codec:
       path: Path,
       image: Image,
       options: EncoderOptions = EncoderOptions.default
-  ): Either[PngError, Path] = encode(image, options).flatMap: bytes =>
-    Try(Files.write(path, bytes)).toEither.left.map(error => IoFailure(s"write $path", errorMessage(error)))
+  ): Either[PngError, Path] = encode(image, options).flatMap(bytes => SafeFiles.write(path, bytes))
 
   def encode(image: Image): Either[PngError, Array[Byte]] = encode(image, EncoderOptions.default)
 
@@ -103,7 +102,7 @@ private[png] object Codec:
       image <- decode(input, options)
       cursor = Binary.Cursor(input)
       _ <- cursor.take(Signature.length)
-      chunks <- parseChunks(cursor)
+      chunks <- parseChunks(cursor, options)
       metadata <- PngMetadata.decode(chunks)
     yield PngDocument(image, metadata)
 
@@ -113,27 +112,33 @@ private[png] object Codec:
       _ <- within("file bytes", input.length, options.maximumFileBytes)
       signature <- cursor.take(Signature.length)
       _ <- Either.cond(signature.toVector == Signature, (), InvalidSignature(signature.toVector))
-      chunks <- parseChunks(cursor)
+      chunks <- parseChunks(cursor, options)
       image <- decodeChunks(chunks, options)
       _ <- Either.cond(cursor.remaining == 0, (), TrailingData(cursor.remaining))
     yield image
 
-  private def parseChunks(cursor: Binary.Cursor): Either[PngError, Vector[Chunk]] =
+  private def parseChunks(
+      cursor: Binary.Cursor,
+      options: DecoderOptions
+  ): Either[PngError, Vector[Chunk]] =
     def loop(chunks: Vector[Chunk]): Either[PngError, Vector[Chunk]] =
-      if cursor.remaining == 0 then Left(InvalidChunkOrder("missing IEND"))
+      if chunks.length >= options.maximumChunks then
+        Left(ResourceLimit("chunk count", chunks.length + 1, options.maximumChunks))
+      else if cursor.remaining == 0 then Left(InvalidChunkOrder("missing IEND"))
       else
         Chunk
           .parse(cursor)
           .flatMap: chunk =>
-            val next = chunks :+ chunk
-            if chunk.chunkType == ChunkType.IEND then Right(next)
-            else loop(next)
+            within("chunk bytes", chunk.length, options.maximumChunkBytes).flatMap: _ =>
+              val next = chunks :+ chunk
+              if chunk.chunkType == ChunkType.IEND then Right(next) else loop(next)
     loop(Vector.empty)
 
   private def decodeChunks(chunks: Vector[Chunk], options: DecoderOptions): Either[PngError, Image] =
     for
       _ <- validateOrder(chunks)
       header <- Header.parse(chunks.head.data)
+      _ <- validateAncillary(chunks, header)
       _ <- within("width", header.width, options.maximumWidth)
       _ <- within("height", header.height, options.maximumHeight)
       _ <- within("pixels", header.width.toLong * header.height, options.maximumPixels)
@@ -271,6 +276,38 @@ private[png] object Codec:
       unknownCritical.fold[Either[PngError, Unit]](Right(()))(chunk =>
         Left(UnsupportedFeature(s"critical chunk ${chunk.chunkType.name}"))
       )
+
+  /** Validate color-type-specific ancillary constraints from PNG chapter 11. */
+  private def validateAncillary(chunks: Vector[Chunk], header: Header): Either[PngError, Unit] =
+    val names = chunks.map(_.chunkType)
+    val idat = names.indexOf(ChunkType.IDAT)
+    val palette = names.indexOf(ChunkType.PLTE)
+    val transparency = chunks.filter(_.chunkType == ChunkType.tRNS)
+    val singleton = Vector(ChunkType.tRNS, ChunkType.gAMA, ChunkType.sRGB, ChunkType.pHYs)
+
+    def occursBefore(kind: ChunkType, boundary: Int): Boolean =
+      val index = names.indexOf(kind)
+      index < 0 || index < boundary
+
+    val colorBoundary = if palette >= 0 then palette else idat
+    if singleton.exists(kind => names.count(_ == kind) > 1) then
+      Left(InvalidChunkOrder("tRNS, gAMA, sRGB, and pHYs may occur at most once"))
+    else if !occursBefore(ChunkType.gAMA, colorBoundary) || !occursBefore(ChunkType.sRGB, colorBoundary)
+    then Left(InvalidChunkOrder("gAMA and sRGB must precede PLTE and IDAT"))
+    else if !occursBefore(ChunkType.pHYs, idat) || !occursBefore(ChunkType.tRNS, idat) then
+      Left(InvalidChunkOrder("pHYs and tRNS must precede IDAT"))
+    else if transparency.nonEmpty &&
+      Set(ColorType.GrayscaleAlpha, ColorType.TruecolorAlpha)(header.colorType)
+    then Left(InvalidImage(s"tRNS is forbidden for color type ${header.colorType.code}"))
+    else
+      transparency.headOption match
+        case Some(chunk) if header.colorType == ColorType.Grayscale && chunk.length != 2 =>
+          Left(InvalidChunkLength("tRNS", chunk.length))
+        case Some(chunk) if header.colorType == ColorType.Truecolor && chunk.length != 6 =>
+          Left(InvalidChunkLength("tRNS", chunk.length))
+        case Some(chunk) if header.colorType == ColorType.Indexed && chunk.length == 0 =>
+          Left(InvalidChunkLength("tRNS", chunk.length))
+        case _ => Right(())
 
   private def errorMessage(error: Throwable): String = Option(error.getMessage).getOrElse(
     error.getClass.getSimpleName

@@ -9,3 +9,5 @@ final class DecoderOptionsSuite extends FunSuite:
     assert(DecoderOptions(maximumHeight = 0).isLeft)
     assert(DecoderOptions(maximumPixels = 0).isLeft)
     assert(DecoderOptions(maximumInflatedBytes = 0).isLeft)
+    assert(DecoderOptions(maximumChunkBytes = 0).isLeft)
+    assert(DecoderOptions(maximumChunks = 0).isLeft)

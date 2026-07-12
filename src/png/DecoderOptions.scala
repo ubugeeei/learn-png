@@ -8,7 +8,9 @@ final case class DecoderOptions private (
     maximumWidth: Int,
     maximumHeight: Int,
     maximumPixels: Long,
-    maximumInflatedBytes: Long
+    maximumInflatedBytes: Long,
+    maximumChunkBytes: Int,
+    maximumChunks: Int
 )
 
 object DecoderOptions:
@@ -18,7 +20,9 @@ object DecoderOptions:
       maximumWidth = 100_000,
       maximumHeight = 100_000,
       maximumPixels = 100_000_000,
-      maximumInflatedBytes = 512L * 1024 * 1024
+      maximumInflatedBytes = 512L * 1024 * 1024,
+      maximumChunkBytes = 64 * 1024 * 1024,
+      maximumChunks = 10_000
     )
 
   def apply(
@@ -26,14 +30,18 @@ object DecoderOptions:
       maximumWidth: Int = default.maximumWidth,
       maximumHeight: Int = default.maximumHeight,
       maximumPixels: Long = default.maximumPixels,
-      maximumInflatedBytes: Long = default.maximumInflatedBytes
+      maximumInflatedBytes: Long = default.maximumInflatedBytes,
+      maximumChunkBytes: Int = default.maximumChunkBytes,
+      maximumChunks: Int = default.maximumChunks
   ): Either[PngError, DecoderOptions] =
     val values = List(
       "maximum file bytes" -> maximumFileBytes,
       "maximum width" -> maximumWidth.toLong,
       "maximum height" -> maximumHeight.toLong,
       "maximum pixels" -> maximumPixels,
-      "maximum inflated bytes" -> maximumInflatedBytes
+      "maximum inflated bytes" -> maximumInflatedBytes,
+      "maximum chunk bytes" -> maximumChunkBytes.toLong,
+      "maximum chunks" -> maximumChunks.toLong
     )
     values.collectFirst {
       case (name, value) if value <= 0 =>
@@ -48,6 +56,8 @@ object DecoderOptions:
             maximumWidth,
             maximumHeight,
             maximumPixels,
-            maximumInflatedBytes
+            maximumInflatedBytes,
+            maximumChunkBytes,
+            maximumChunks
           )
         )

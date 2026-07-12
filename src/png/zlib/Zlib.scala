@@ -1,7 +1,7 @@
 package png
 
 import java.io.ByteArrayOutputStream
-import java.util.zip.{ Deflater, DeflaterOutputStream, Inflater, InflaterOutputStream }
+import java.util.zip.{ Deflater, DeflaterOutputStream, Inflater }
 import scala.util.{ Try, Using }
 import png.PngError.CompressionFailure
 
@@ -16,22 +16,26 @@ private[png] object Zlib:
     .toEither.left
       .map(error => CompressionFailure(Option(error.getMessage).getOrElse(error.getClass.getSimpleName)))
 
+  /** Inflate exactly one complete zlib stream and reject dictionaries, truncation, and trailing bytes. */
   def decompress(input: Array[Byte], maximumBytes: Int): Either[PngError, Array[Byte]] = Try:
-    val output = BoundedOutputStream(maximumBytes)
-    Using.resource(InflaterOutputStream(output, Inflater()))(_.write(input))
-    output.bytes
-  .toEither.left
-    .map(error => CompressionFailure(Option(error.getMessage).getOrElse(error.getClass.getSimpleName)))
-
-  final private class BoundedOutputStream(limit: Int) extends java.io.OutputStream:
-    private val output = ByteArrayOutputStream()
-    override def write(value: Int): Unit =
-      ensureCapacity(1)
-      output.write(value)
-    override def write(bytes: Array[Byte], offset: Int, length: Int): Unit =
-      ensureCapacity(length)
-      output.write(bytes, offset, length)
-    def bytes: Array[Byte] = output.toByteArray
-    private def ensureCapacity(additional: Int): Unit =
-      if output.size().toLong + additional > limit then
-        throw IllegalArgumentException(s"decompressed data exceeds $limit bytes")
+    val inflater = Inflater()
+    val output = ByteArrayOutputStream()
+    val buffer = new Array[Byte](32 * 1024)
+    try
+      inflater.setInput(input)
+      while !inflater.finished() && !inflater.needsDictionary() && !inflater.needsInput() do
+        val count = inflater.inflate(buffer)
+        if count == 0 && !inflater.finished() then
+          throw IllegalArgumentException("zlib stream made no progress")
+        if output.size().toLong + count > maximumBytes then
+          throw IllegalArgumentException(s"decompressed data exceeds $maximumBytes bytes")
+        output.write(buffer, 0, count)
+      if inflater.needsDictionary() then throw IllegalArgumentException("zlib dictionary is not permitted")
+      if !inflater.finished() then throw IllegalArgumentException("truncated zlib stream")
+      if inflater.getRemaining != 0 then
+        throw IllegalArgumentException(s"${inflater.getRemaining} trailing zlib bytes")
+      output.toByteArray
+    finally inflater.end()
+  .toEither.left.map(error =>
+    CompressionFailure(Option(error.getMessage).getOrElse(error.getClass.getSimpleName))
+  )
