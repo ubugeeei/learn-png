@@ -43,9 +43,18 @@ private[png] object Codec:
       metadataChunks <- PngMetadata.chunks(document.metadata)
       extendedChunks <- ExtendedMetadata.chunks(document.extendedMetadata)
       colorChunks <- ColorMetadata.chunks(document.colorMetadata)
+      outputHeader = Header(
+        document.image.width,
+        document.image.height,
+        8,
+        ColorType.TruecolorAlpha,
+        options.interlaced
+      ).toOption.get
+      miscellaneousChunks <- MiscellaneousMetadata.chunks(document.miscellaneousMetadata, outputHeader, 0)
     yield
       val afterHeader = Signature.length + 12 + 13
-      imageBytes.take(afterHeader) ++ (metadataChunks ++ extendedChunks ++ colorChunks).flatMap(_.bytes) ++
+      imageBytes.take(afterHeader) ++
+        (metadataChunks ++ extendedChunks ++ colorChunks ++ miscellaneousChunks).flatMap(_.bytes) ++
         imageBytes.drop(afterHeader)
 
   def encode(image: Image, options: EncoderOptions): Either[PngError, Array[Byte]] =
@@ -110,7 +119,9 @@ private[png] object Codec:
       extended <- ExtendedMetadata.decode(chunks)
       header <- Header.parse(chunks.head.data)
       color <- ColorMetadata.decode(chunks, header)
-    yield PngDocument(image, metadata, extended, color)
+      paletteEntries = chunks.find(_.chunkType == ChunkType.PLTE).fold(0)(_.length / 3)
+      miscellaneous <- MiscellaneousMetadata.decode(chunks, header, paletteEntries)
+    yield PngDocument(image, metadata, extended, color, miscellaneous)
 
   def decode(input: Array[Byte], options: DecoderOptions): Either[PngError, Image] =
     val cursor = Binary.Cursor(input)

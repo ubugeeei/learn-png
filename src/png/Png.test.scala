@@ -70,6 +70,21 @@ final class PngSuite extends FunSuite:
     val document = PngDocument(image(1, 1), colorMetadata = color)
     assertEquals(Png.encode(document).flatMap(Png.decodeDocument), Right(document))
 
+  test("document API preserves RGBA-compatible miscellaneous metadata"):
+    val palette = SuggestedPalette(
+      "Suggestion",
+      8,
+      Vector(SuggestedPaletteEntry(1, 2, 3, 255, 10))
+    ).toOption.get
+    val miscellaneous = MiscellaneousMetadata(
+      Some(BackgroundColor.Truecolor(10, 20, 30)),
+      None,
+      Vector(palette),
+      Vector(CompressedText("Comment", "compressed text").toOption.get)
+    )
+    val document = PngDocument(image(1, 1), miscellaneousMetadata = miscellaneous)
+    assertEquals(Png.encode(document).flatMap(Png.decodeDocument), Right(document))
+
   test("encoded output is readable by the JDK ImageIO implementation"):
     val original = image(7, 5)
     val bytes = Png.encode(original).toOption.get
