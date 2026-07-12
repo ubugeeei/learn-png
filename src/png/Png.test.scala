@@ -73,6 +73,23 @@ final class PngSuite extends FunSuite:
       Some(PngError.TrailingData(1))
     )
 
+  test("callers can enforce file and image resource limits"):
+    val original = image(8, 4)
+    val bytes = Png.encode(original).toOption.get
+    val fileLimit =
+      DecoderOptions(maximumFileBytes = bytes.length - 1).toOption.get
+    assert(
+      Png
+        .decode(bytes, fileLimit)
+        .left
+        .exists(_.isInstanceOf[PngError.ResourceLimit])
+    )
+    val pixelLimit = DecoderOptions(maximumPixels = 31).toOption.get
+    assertEquals(
+      Png.decode(bytes, pixelLimit).left.toOption,
+      Some(PngError.ResourceLimit("pixels", 32, 31))
+    )
+
   test("decoder rejects decompression bombs at the expected scanline boundary"):
     val bytes = Png.encode(image(1, 1)).toOption.get
     val idatStart = 8 + 25

@@ -18,6 +18,9 @@ enum PngError derives CanEqual:
   case InvalidImage(reason: String)
   case InvalidFilter(value: Int)
   case CompressionFailure(reason: String)
+  case IoFailure(operation: String, reason: String)
+  case InvalidArguments(reason: String)
+  case ResourceLimit(resource: String, actual: Long, maximum: Long)
   case TrailingData(bytes: Int)
 
   def message: String = this match
@@ -29,10 +32,14 @@ enum PngError derives CanEqual:
       s"invalid $kind chunk length: $length"
     case CrcMismatch(kind, expected, actual) =>
       f"CRC mismatch in $kind: expected 0x$expected%08x, computed 0x$actual%08x"
-    case InvalidHeader(reason)      => s"invalid IHDR: $reason"
-    case InvalidChunkOrder(reason)  => s"invalid chunk order: $reason"
-    case UnsupportedFeature(reason) => s"unsupported PNG feature: $reason"
-    case InvalidImage(reason)       => s"invalid image: $reason"
-    case InvalidFilter(value)       => s"invalid filter method: $value"
-    case CompressionFailure(reason) => s"zlib failure: $reason"
-    case TrailingData(bytes)        => s"$bytes trailing bytes after IEND"
+    case InvalidHeader(reason)        => s"invalid IHDR: $reason"
+    case InvalidChunkOrder(reason)    => s"invalid chunk order: $reason"
+    case UnsupportedFeature(reason)   => s"unsupported PNG feature: $reason"
+    case InvalidImage(reason)         => s"invalid image: $reason"
+    case InvalidFilter(value)         => s"invalid filter method: $value"
+    case CompressionFailure(reason)   => s"zlib failure: $reason"
+    case IoFailure(operation, reason) => s"could not $operation: $reason"
+    case InvalidArguments(reason)     => s"invalid arguments: $reason"
+    case ResourceLimit(resource, actual, maximum) =>
+      s"$resource $actual exceeds configured maximum $maximum"
+    case TrailingData(bytes) => s"$bytes trailing bytes after IEND"

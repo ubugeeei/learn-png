@@ -1,6 +1,8 @@
 package png
 
 import java.io.ByteArrayOutputStream
+import java.nio.file.{Files, Path}
+import scala.util.Try
 import png.PngError.*
 
 /** Dependency-free PNG encoder and decoder.
@@ -13,6 +15,33 @@ import png.PngError.*
 object Png:
   val Signature: Vector[Byte] =
     Vector(137, 80, 78, 71, 13, 10, 26, 10).map(_.toByte)
+
+  /** Read and decode a complete PNG file. */
+  def read(path: Path): Either[PngError, Image] =
+    read(path, DecoderOptions.default)
+
+  def read(path: Path, options: DecoderOptions): Either[PngError, Image] =
+    for
+      size <- Try(Files.size(path)).toEither.left.map(error =>
+        IoFailure(s"inspect $path", errorMessage(error))
+      )
+      _ <- within("file bytes", size, options.maximumFileBytes)
+      bytes <- Try(Files.readAllBytes(path)).toEither.left.map(error =>
+        IoFailure(s"read $path", errorMessage(error))
+      )
+      image <- decode(bytes, options)
+    yield image
+
+  /** Encode an image and write it to a file. */
+  def write(
+      path: Path,
+      image: Image,
+      options: EncoderOptions = EncoderOptions.default
+  ): Either[PngError, Path] =
+    encode(image, options).flatMap: bytes =>
+      Try(Files.write(path, bytes)).toEither.left.map(error =>
+        IoFailure(s"write $path", errorMessage(error))
+      )
 
   def encode(image: Image): Either[PngError, Array[Byte]] =
     encode(image, EncoderOptions.default)
@@ -78,8 +107,15 @@ object Png:
     output.toByteArray
 
   def decode(input: Array[Byte]): Either[PngError, Image] =
+    decode(input, DecoderOptions.default)
+
+  def decode(
+      input: Array[Byte],
+      options: DecoderOptions
+  ): Either[PngError, Image] =
     val cursor = Binary.Cursor(input)
     for
+      _ <- within("file bytes", input.length, options.maximumFileBytes)
       signature <- cursor.take(Signature.length)
       _ <- Either.cond(
         signature.toVector == Signature,
@@ -87,7 +123,7 @@ object Png:
         InvalidSignature(signature.toVector)
       )
       chunks <- parseChunks(cursor)
-      image <- decodeChunks(chunks)
+      image <- decodeChunks(chunks, options)
       _ <- Either.cond(
         cursor.remaining == 0,
         (),
@@ -109,10 +145,20 @@ object Png:
             else loop(next)
     loop(Vector.empty)
 
-  private def decodeChunks(chunks: Vector[Chunk]): Either[PngError, Image] =
+  private def decodeChunks(
+      chunks: Vector[Chunk],
+      options: DecoderOptions
+  ): Either[PngError, Image] =
     for
       _ <- validateOrder(chunks)
       header <- Header.parse(chunks.head.data)
+      _ <- within("width", header.width, options.maximumWidth)
+      _ <- within("height", header.height, options.maximumHeight)
+      _ <- within(
+        "pixels",
+        header.width.toLong * header.height,
+        options.maximumPixels
+      )
       transparency = chunks
         .find(_.chunkType == ChunkType.tRNS)
         .fold(Array.emptyByteArray)(_.data)
@@ -132,6 +178,11 @@ object Png:
         expectedLong <= Int.MaxValue,
         (),
         InvalidImage("decompressed image exceeds JVM limits")
+      )
+      _ <- within(
+        "inflated bytes",
+        expectedLong,
+        options.maximumInflatedBytes
       )
       expected = expectedLong.toInt
       inflated <- Zlib.decompress(compressed, expected)
@@ -292,3 +343,13 @@ object Png:
       unknownCritical.fold[Either[PngError, Unit]](Right(()))(chunk =>
         Left(UnsupportedFeature(s"critical chunk ${chunk.chunkType.name}"))
       )
+
+  private def errorMessage(error: Throwable): String =
+    Option(error.getMessage).getOrElse(error.getClass.getSimpleName)
+
+  private def within(
+      resource: String,
+      actual: Long,
+      maximum: Long
+  ): Either[PngError, Unit] =
+    Either.cond(actual <= maximum, (), ResourceLimit(resource, actual, maximum))

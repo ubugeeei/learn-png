@@ -1,6 +1,6 @@
 # 5. Encoding, Step by Step
 
-Follow [`Png.encode`](../src/png/codec/Png.scala) while consulting the
+Follow [`Png.encode`](../src/png/Png.scala) while consulting the
 [encoder recommendations](https://www.w3.org/TR/png-3/#13Encoders).
 
 1. Construct IHDR for the chosen lossless representation: RGBA, depth 8, no interlace.
