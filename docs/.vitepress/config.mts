@@ -70,7 +70,8 @@ export default withMermaid(defineConfig({
       {
         text: "Conformance",
         items: [
-          { text: "Coverage matrix", link: "/09-conformance/01-coverage-matrix" }
+          { text: "Coverage matrix", link: "/09-conformance/01-coverage-matrix" },
+          { text: "Fuzzing and benchmarking", link: "/09-conformance/02-fuzzing-and-benchmarking" }
         ]
       },
       {

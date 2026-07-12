@@ -60,6 +60,7 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 ## Part 9 — Conformance
 
 14. [PNG Third Edition coverage matrix](09-conformance/01-coverage-matrix.md)
+15. [Fuzzing and benchmarking](09-conformance/02-fuzzing-and-benchmarking.md)
 
 ## Part 10 — Animation
 

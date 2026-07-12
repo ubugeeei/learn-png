@@ -87,8 +87,8 @@ Status meanings:
 | Property-based tests | 🟡 | filters, Adam7 geometry, and RGBA16 codec; metadata/APNG generators remain |
 | Independent decoder interoperability | 🟡 | Java ImageIO full-raster checks for directly comparable samples |
 | PNGSuite corpus | 🟡 | 15 basic fixtures plus derived CRC/truncation/trailing-data negatives |
-| Fuzzing | ❌ | coverage-guided fuzz target required |
-| Benchmarks | ❌ | throughput and allocation baselines required |
+| Fuzzing | 🟡 | Jazzer-compatible four-decoder target and seed regression; scheduled campaign remains |
+| Benchmarks | 🟡 | warm-up throughput harness for RGBA8/16; JMH allocation baselines remain |
 | Published binary/API compatibility | ❌ | no artifact versioning or MiMa policy yet |
 
 ## Definition of “comprehensive” for this project
