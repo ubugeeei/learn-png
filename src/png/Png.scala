@@ -37,6 +37,20 @@ object Png:
     options
   )
 
+  /** Decode every source sample into a 16-bit raster without discarding low-order bits. */
+  def decode16(bytes: Array[Byte]): Either[PngError, Image16] =
+    decode16(bytes, DecoderOptions.default)
+
+  def decode16(bytes: Array[Byte], options: DecoderOptions): Either[PngError, Image16] =
+    Codec16.decode(bytes, options)
+
+  /** Encode a lossless RGBA16 raster as color type 6, bit depth 16. */
+  def encode16(image: Image16): Either[PngError, Array[Byte]] =
+    encode16(image, EncoderOptions.default)
+
+  def encode16(image: Image16, options: EncoderOptions): Either[PngError, Array[Byte]] =
+    Codec16.encode(image, options)
+
   /** Decode pixels plus color, density, text, and safe-to-copy metadata. */
   def decodeDocument(bytes: Array[Byte]): Either[PngError, PngDocument] = decodeDocument(
     bytes,

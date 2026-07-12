@@ -137,6 +137,26 @@ private[png] object Codec:
               if chunk.chunkType == ChunkType.IEND then Right(next) else loop(next)
     loop(Vector.empty)
 
+  /** Parse and structurally validate a datastream for specialized raster decoders. */
+  private[png] def validated(
+      input: Array[Byte],
+      options: DecoderOptions
+  ): Either[PngError, (Vector[Chunk], Header)] =
+    val cursor = Binary.Cursor(input)
+    for
+      _ <- within("file bytes", input.length, options.maximumFileBytes)
+      signature <- cursor.take(Signature.length)
+      _ <- Either.cond(signature.toVector == Signature, (), InvalidSignature(signature.toVector))
+      chunks <- parseChunks(cursor, options)
+      _ <- Either.cond(cursor.remaining == 0, (), TrailingData(cursor.remaining))
+      _ <- validateOrder(chunks)
+      header <- Header.parse(chunks.head.data)
+      _ <- validateAncillary(chunks, header)
+      _ <- within("width", header.width, options.maximumWidth)
+      _ <- within("height", header.height, options.maximumHeight)
+      _ <- within("pixels", header.width.toLong * header.height, options.maximumPixels)
+    yield chunks -> header
+
   private def decodeChunks(chunks: Vector[Chunk], options: DecoderOptions): Either[PngError, Image] =
     for
       _ <- validateOrder(chunks)
@@ -316,8 +336,9 @@ private[png] object Codec:
     error.getClass.getSimpleName
   )
 
-  private def within(resource: String, actual: Long, maximum: Long): Either[PngError, Unit] = Either.cond(
-    actual <= maximum,
-    (),
-    ResourceLimit(resource, actual, maximum)
-  )
+  private[png] def within(resource: String, actual: Long, maximum: Long): Either[PngError, Unit] =
+    Either.cond(
+      actual <= maximum,
+      (),
+      ResourceLimit(resource, actual, maximum)
+    )
