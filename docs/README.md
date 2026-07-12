@@ -47,6 +47,11 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 
 11. [Deriving Adam7](07-interlace/01-derive-adam7.md)
 
+## Part 8 — Production boundaries
+
+12. [Metadata without silent data loss](08-production/01-metadata-and-transcoding.md)
+13. [I/O and resource contracts](08-production/02-io-and-resource-contracts.md)
+
 ## Original implementation notes
 
 12. [A map of the format](01-format-map.md)

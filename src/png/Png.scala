@@ -10,10 +10,13 @@ import java.nio.file.Path
   * caller: these methods flush but never close them.
   */
 object Png:
+  /** Fixed eight-byte datastream signature from PNG §5.2. */
   val Signature: Vector[Byte] = Codec.Signature
 
+  /** Encode an RGBA8 image with default lossless options. */
   def encode(image: Image): Either[PngError, Array[Byte]] = Codec.encode(image)
 
+  /** Encode an RGBA8 image with explicit compression, interlace, and IDAT sizing. */
   def encode(image: Image, options: EncoderOptions): Either[PngError, Array[Byte]] = Codec.encode(
     image,
     options
@@ -25,8 +28,10 @@ object Png:
   def encode(document: PngDocument, options: EncoderOptions): Either[PngError, Array[Byte]] = Codec
     .encodeDocument(document, options)
 
+  /** Decode pixels while intentionally discarding portable metadata. */
   def decode(bytes: Array[Byte]): Either[PngError, Image] = Codec.decode(bytes)
 
+  /** Decode pixels under caller-defined resource limits. */
   def decode(bytes: Array[Byte], options: DecoderOptions): Either[PngError, Image] = Codec.decode(
     bytes,
     options
@@ -41,10 +46,13 @@ object Png:
   def decodeDocument(bytes: Array[Byte], options: DecoderOptions): Either[PngError, PngDocument] = Codec
     .decodeDocument(bytes, options)
 
+  /** Read a file under default limits. */
   def read(path: Path): Either[PngError, Image] = Codec.read(path)
 
+  /** Read a file under explicit file, chunk, dimension, pixel, and inflation limits. */
   def read(path: Path, options: DecoderOptions): Either[PngError, Image] = Codec.read(path, options)
 
+  /** Encode and transactionally replace a path through a forced temporary sibling. */
   def write(
       path: Path,
       image: Image,
@@ -53,10 +61,12 @@ object Png:
 
   def read(input: InputStream): Either[PngError, Image] = read(input, DecoderOptions.default)
 
+  /** Consume but never close a caller-owned stream, stopping at its configured byte limit. */
   def read(input: InputStream, options: DecoderOptions): Either[PngError, Image] = PngStreams
     .read(input, options)
     .flatMap(Codec.decode(_, options))
 
+  /** Write and flush, but never close, a caller-owned output stream. */
   def write(output: OutputStream, image: Image, options: EncoderOptions): Either[PngError, Unit] = Codec
     .encode(image, options)
     .flatMap(PngStreams.write(output, _))

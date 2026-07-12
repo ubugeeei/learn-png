@@ -51,6 +51,13 @@ export default defineConfig({
       {
         text: "Interlacing",
         items: [{ text: "Deriving Adam7", link: "/07-interlace/01-derive-adam7" }]
+      },
+      {
+        text: "Production boundaries",
+        items: [
+          { text: "Metadata and transcoding", link: "/08-production/01-metadata-and-transcoding" },
+          { text: "I/O and resource contracts", link: "/08-production/02-io-and-resource-contracts" }
+        ]
       }
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei/learn-png" }],
