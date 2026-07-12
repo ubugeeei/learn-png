@@ -1,6 +1,6 @@
 # 5. Encoding, Step by Step
 
-Follow [`Png.encode`](../src/main/scala/png/Png.scala) while consulting the
+Follow [`Png.encode`](../src/png/codec/Png.scala) while consulting the
 [encoder recommendations](https://www.w3.org/TR/png-3/#13Encoders).
 
 1. Construct IHDR for the chosen lossless representation: RGBA, depth 8, no interlace.
@@ -42,4 +42,3 @@ only to keep this construction example compact.
 Chunk splitting changes no image semantics. A streaming encoder would emit multiple bounded IDAT
 chunks to limit memory. This educational encoder uses one chunk so the transformation is visible
 without a streaming abstraction obscuring it.
-

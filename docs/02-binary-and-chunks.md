@@ -1,7 +1,7 @@
 # 2. Binary Values and Chunks
 
 Read [PNG integers and byte order](https://www.w3.org/TR/png-3/#7Integers-and-byte-order), then
-[`Binary.scala`](../src/main/scala/png/Binary.scala). PNG uses unsigned integers, while the JVM's
+[`Binary.scala`](../src/png/binary/Binary.scala). PNG uses unsigned integers, while the JVM's
 integer types are signed. The representation strategy is simple:
 
 - store `uint8` in an `Int`;
@@ -33,4 +33,3 @@ Test against a published complete chunk, not merely against your own encoder: IE
 
 Change one payload bit in a serialized chunk and parse it. The parser must return `CrcMismatch`,
 not partial data and not an uncaught exception.
-
