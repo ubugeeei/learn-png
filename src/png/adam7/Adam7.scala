@@ -2,18 +2,11 @@ package png
 
 /** Geometry for PNG's seven-pass Adam7 interlace.
   *
-  * Coordinates come from [[https://www.w3.org/TR/png-3/#8Interlace PNG §8.2]].
-  * Each pass is a miniature image whose filter history starts from an empty
-  * previous row.
+  * Coordinates come from [[https://www.w3.org/TR/png-3/#8Interlace PNG §8.2]]. Each pass is a miniature image
+  * whose filter history starts from an empty previous row.
   */
 private[png] object Adam7:
-  final case class Pass(
-      number: Int,
-      xStart: Int,
-      yStart: Int,
-      xStep: Int,
-      yStep: Int
-  ):
+  final case class Pass(number: Int, xStart: Int, yStart: Int, xStep: Int, yStep: Int):
     def width(imageWidth: Int): Int = extent(imageWidth, xStart, xStep)
     def height(imageHeight: Int): Int = extent(imageHeight, yStart, yStep)
     def isEmpty(imageWidth: Int, imageHeight: Int): Boolean =
@@ -39,13 +32,12 @@ private[png] object Adam7:
     passes.iterator
       .filterNot(_.isEmpty(header.width, header.height))
       .map: pass =>
-        val rowBytes =
-          scanlineBytes(pass.width(header.width), header.bitsPerPixel)
+        val rowBytes = scanlineBytes(pass.width(header.width), header.bitsPerPixel)
         (rowBytes.toLong + 1) * pass.height(header.height)
       .sum
 
-  def scanlineBytes(width: Int, bitsPerPixel: Int): Int =
-    ((width.toLong * bitsPerPixel + 7) / 8).toInt
+  def scanlineBytes(width: Int, bitsPerPixel: Int): Int = ((width.toLong * bitsPerPixel + 7) / 8).toInt
 
   private def extent(size: Int, start: Int, step: Int): Int =
-    if size <= start then 0 else (size - start + step - 1) / step
+    if size <= start then 0
+    else (size - start + step - 1) / step

@@ -12,13 +12,14 @@ final case class DecoderOptions private (
 )
 
 object DecoderOptions:
-  val default: DecoderOptions = new DecoderOptions(
-    maximumFileBytes = 256L * 1024 * 1024,
-    maximumWidth = 100_000,
-    maximumHeight = 100_000,
-    maximumPixels = 100_000_000,
-    maximumInflatedBytes = 512L * 1024 * 1024
-  )
+  val default: DecoderOptions =
+    new DecoderOptions(
+      maximumFileBytes = 256L * 1024 * 1024,
+      maximumWidth = 100_000,
+      maximumHeight = 100_000,
+      maximumPixels = 100_000_000,
+      maximumInflatedBytes = 512L * 1024 * 1024
+    )
 
   def apply(
       maximumFileBytes: Long = default.maximumFileBytes,
@@ -34,9 +35,13 @@ object DecoderOptions:
       "maximum pixels" -> maximumPixels,
       "maximum inflated bytes" -> maximumInflatedBytes
     )
-    values.collectFirst { case (name, value) if value <= 0 => name } match
-      case Some(name) => Left(InvalidArguments(s"$name must be positive"))
-      case None       =>
+    values.collectFirst {
+      case (name, value) if value <= 0 =>
+        name
+    } match
+      case Some(name) =>
+        Left(InvalidArguments(s"$name must be positive"))
+      case None =>
         Right(
           new DecoderOptions(
             maximumFileBytes,

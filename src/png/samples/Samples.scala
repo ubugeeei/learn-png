@@ -4,10 +4,8 @@ import png.PngError.InvalidImage
 
 /** Conversion between packed PNG samples and the public RGBA raster. */
 private[png] object Samples:
-  def rgba8Row(pixels: Vector[Rgba]): Array[Byte] =
-    pixels.toArray.flatMap(pixel =>
-      Array(pixel.red, pixel.green, pixel.blue, pixel.alpha).map(_.toByte)
-    )
+  def rgba8Row(pixels: Vector[Rgba]): Array[Byte] = pixels.toArray
+    .flatMap(pixel => Array(pixel.red, pixel.green, pixel.blue, pixel.alpha).map(_.toByte))
 
   def decodeRow(
       bytes: Array[Byte],
@@ -16,8 +14,7 @@ private[png] object Samples:
       palette: Vector[Rgba],
       transparency: Array[Byte]
   ): Either[PngError, Vector[Rgba]] =
-    val samples =
-      unpack(bytes, width * header.colorType.channels, header.bitDepth)
+    val samples = unpack(bytes, width * header.colorType.channels, header.bitDepth)
     header.colorType match
       case ColorType.Grayscale =>
         val transparent =
@@ -29,20 +26,15 @@ private[png] object Samples:
               scale(value, header.bitDepth),
               scale(value, header.bitDepth),
               scale(value, header.bitDepth),
-              if transparent.contains(value) then 0 else 255
+              if transparent.contains(value) then 0
+              else 255
             )
           )
         )
       case ColorType.Truecolor =>
         val transparent =
           if transparency.length == 6 then
-            Some(
-              (
-                unsigned16(transparency, 0),
-                unsigned16(transparency, 2),
-                unsigned16(transparency, 4)
-              )
-            )
+            Some((unsigned16(transparency, 0), unsigned16(transparency, 2), unsigned16(transparency, 4)))
           else None
         Right(
           samples
@@ -53,7 +45,8 @@ private[png] object Samples:
                 scale(red, header.bitDepth),
                 scale(green, header.bitDepth),
                 scale(blue, header.bitDepth),
-                if transparent.contains((red, green, blue)) then 0 else 255
+                if transparent.contains((red, green, blue)) then 0
+                else 255
               )
             }
             .toVector
@@ -63,9 +56,7 @@ private[png] object Samples:
           case (result, index) =>
             for
               pixels <- result
-              color <- palette
-                .lift(index)
-                .toRight(InvalidImage(s"palette index $index is out of range"))
+              color <- palette.lift(index).toRight(InvalidImage(s"palette index $index is out of range"))
             yield pixels :+ color
       case ColorType.GrayscaleAlpha =>
         Right(
@@ -94,16 +85,9 @@ private[png] object Samples:
             .toVector
         )
 
-  def palette(
-      data: Array[Byte],
-      transparency: Array[Byte]
-  ): Either[PngError, Vector[Rgba]] =
+  def palette(data: Array[Byte], transparency: Array[Byte]): Either[PngError, Vector[Rgba]] =
     if data.isEmpty || data.length % 3 != 0 || data.length > 768 then
-      Left(
-        InvalidImage(
-          s"PLTE length ${data.length} must be a non-zero multiple of 3 up to 768"
-        )
-      )
+      Left(InvalidImage(s"PLTE length ${data.length} must be a non-zero multiple of 3 up to 768"))
     else
       Right(
         data
@@ -122,8 +106,7 @@ private[png] object Samples:
 
   private def unpack(bytes: Array[Byte], count: Int, depth: Int): Vector[Int] =
     if depth == 8 then bytes.iterator.take(count).map(_ & 0xff).toVector
-    else if depth == 16 then
-      bytes.grouped(2).take(count).map(pair => unsigned16(pair, 0)).toVector
+    else if depth == 16 then bytes.grouped(2).take(count).map(pair => unsigned16(pair, 0)).toVector
     else
       val mask = (1 << depth) - 1
       Vector.tabulate(count): index =>

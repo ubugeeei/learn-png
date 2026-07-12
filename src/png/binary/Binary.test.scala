@@ -6,10 +6,7 @@ import png.PngError.UnexpectedEnd
 
 final class BinarySuite extends FunSuite:
   test("uint32 is emitted in network byte order"):
-    assertEquals(
-      0x89abcdefL.uint32Bytes.toVector,
-      Vector(0x89, 0xab, 0xcd, 0xef).map(_.toByte)
-    )
+    assertEquals(0x89abcdefL.uint32Bytes.toVector, Vector(0x89, 0xab, 0xcd, 0xef).map(_.toByte))
 
   test("cursor reads unsigned 32-bit values"):
     val cursor = Binary.Cursor(Array(0xff, 0xff, 0xff, 0xff).map(_.toByte))

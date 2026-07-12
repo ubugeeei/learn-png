@@ -17,7 +17,4 @@ final class ImageSuite extends FunSuite:
   test("rows preserve row-major order"):
     val pixels = (0 until 6).map(value => Rgba(value, 0, 0).toOption.get)
     val image = Image(3, 2, pixels).toOption.get
-    assertEquals(
-      image.rows.map(_.map(_.red)),
-      Vector(Vector(0, 1, 2), Vector(3, 4, 5))
-    )
+    assertEquals(image.rows.map(_.map(_.red)), Vector(Vector(0, 1, 2), Vector(3, 4, 5)))

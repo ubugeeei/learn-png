@@ -11,10 +11,7 @@ final class PngCliSuite extends FunSuite:
     val path = Files.createTempFile("learn-png-info", ".png")
     try
       Png.write(path, image).toOption.get
-      assertEquals(
-        PngCli.run(List("info", path.toString)),
-        Right("1x1 RGBA8 (0 non-opaque pixels)")
-      )
+      assertEquals(PngCli.run(List("info", path.toString)), Right("1x1 RGBA8 (0 non-opaque pixels)"))
     finally Files.deleteIfExists(path): Unit
 
   test("copy can emit Adam7 output"):
@@ -22,11 +19,7 @@ final class PngCliSuite extends FunSuite:
     val output = Files.createTempFile("learn-png-output", ".png")
     try
       Png.write(input, image).toOption.get
-      assert(
-        PngCli
-          .run(List("copy", input.toString, output.toString, "--interlace"))
-          .isRight
-      )
+      assert(PngCli.run(List("copy", input.toString, output.toString, "--interlace")).isRight)
       assertEquals(Png.read(output), Right(image))
     finally
       Files.deleteIfExists(input)
