@@ -61,6 +61,10 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 
 14. [PNG Third Edition coverage matrix](09-conformance/01-coverage-matrix.md)
 
+## Part 10 — Animation
+
+15. [APNG frames and canvas composition](10-apng/01-frames-and-canvas.md)
+
 ## Original implementation notes
 
 12. [A map of the format](01-format-map.md)

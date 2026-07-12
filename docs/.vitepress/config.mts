@@ -72,6 +72,10 @@ export default withMermaid(defineConfig({
         items: [
           { text: "Coverage matrix", link: "/09-conformance/01-coverage-matrix" }
         ]
+      },
+      {
+        text: "Animation",
+        items: [{ text: "Frames and canvas", link: "/10-apng/01-frames-and-canvas" }]
       }
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei/learn-png" }],
