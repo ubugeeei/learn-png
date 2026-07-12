@@ -1,12 +1,13 @@
 package png
 
 import munit.FunSuite
+import munit.ScalaCheckSuite
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
 import png.PngError.*
 
-final class ChunkSuite extends FunSuite:
-  test(
-    "chunk type bits expose ancillary, private, and safe-to-copy properties"
-  ):
+final class ChunkSuite extends FunSuite with ScalaCheckSuite:
+  test("chunk type bits expose ancillary, private, and safe-to-copy properties"):
     val kind = ChunkType.fromString("vpAg").toOption.get
     assert(kind.isAncillary)
     assert(kind.isPrivate)
@@ -21,8 +22,7 @@ final class ChunkSuite extends FunSuite:
 
   test("IEND matches the specification's complete byte sequence"):
     val chunk = Chunk(ChunkType.IEND, Array.emptyByteArray).toOption.get
-    val expected =
-      Vector(0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130).map(_.toByte)
+    val expected = Vector(0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130).map(_.toByte)
     assertEquals(chunk.bytes.toVector, expected)
 
   test("chunk payload is immutable at both boundaries"):
@@ -36,11 +36,15 @@ final class ChunkSuite extends FunSuite:
   test("parser rejects a corrupted CRC"):
     val bytes = Chunk(ChunkType.IEND, Array.emptyByteArray).toOption.get.bytes
     bytes(bytes.length - 1) = 0
-    assert(
-      Chunk.parse(Binary.Cursor(bytes)).left.exists(_.isInstanceOf[CrcMismatch])
-    )
+    assert(Chunk.parse(Binary.Cursor(bytes)).left.exists(_.isInstanceOf[CrcMismatch]))
 
   test("chunk serialization and parsing round-trip"):
-    val original =
-      Chunk(ChunkType.IDAT, Array.tabulate[Byte](256)(_.toByte)).toOption.get
+    val original = Chunk(ChunkType.IDAT, Array.tabulate[Byte](256)(_.toByte)).toOption.get
     assertEquals(Chunk.parse(Binary.Cursor(original.bytes)), Right(original))
+
+  property("every bounded IDAT payload survives framing and CRC validation"):
+    val payloads = Gen.listOf(Gen.choose(Byte.MinValue, Byte.MaxValue)).map(_.take(4096).toArray)
+
+    forAll(payloads): payload =>
+      val original = Chunk(ChunkType.IDAT, payload).toOption.get
+      Chunk.parse(Binary.Cursor(original.bytes)).contains(original)
