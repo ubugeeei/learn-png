@@ -71,11 +71,11 @@ Status meanings:
 
 | Area | Decode | Encode | Notes |
 |---|:---:|:---:|---|
-| acTL animation control | ✅ | ❌ | positive frame count and play count decoded |
-| fcTL frame control | ✅ | ❌ | sequence, rectangle, delay, dispose, blend validated |
-| fdAT frame data | ✅ | ❌ | continuous sequence and per-frame zlib stream decoded |
-| Frame composition | ✅ | ❌ | 16-bit SOURCE/OVER and all disposal operations |
-| Static fallback image | ✅ | ✅ | handled only as ordinary PNG, animation ignored as unknown ancillary data |
+| acTL animation control | ✅ | ✅ | positive frame count and unsigned play count validated |
+| fcTL frame control | ✅ | ✅ | sequence, rectangle, delay, dispose, blend validated |
+| fdAT frame data | ✅ | ✅ | continuous sequence and per-frame zlib stream handled |
+| Frame composition | ✅ | ✅ | encoder accepts rectangles; decoder applies 16-bit SOURCE/OVER and disposal |
+| Static fallback image | ✅ | ✅ | first encoded frame is a complete ordinary PNG fallback |
 
 ## Operational completeness
 

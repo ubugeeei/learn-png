@@ -43,3 +43,38 @@ means 100, as required by APNG, rather than division by zero.
 `Png.decodeAnimation` returns `PngAnimation`: canvas dimensions, play count, composed `Image16`
 frames, static fallback, and whether that fallback participates as the first animation frame.
 
+## Encode rectangles, not screenshots
+
+`Png.encodeAnimation` accepts an `AnimationSource`. Its frames are the uncomposited rectangles that
+will be placed on the canvas, not a sequence of already-composited screenshots. This distinction
+keeps small changes small: a blinking one-pixel cursor needs a one-pixel frame.
+
+```scala
+val first = AnimationSourceFrame(fullCanvas).toOption.get
+val cursor = AnimationSourceFrame(
+  image = onePixel,
+  xOffset = 12,
+  yOffset = 4,
+  delayNumerator = 1,
+  delayDenominator = 10,
+  blend = BlendOperation.Source
+).toOption.get
+
+val animation = AnimationSource(
+  canvasWidth = fullCanvas.width,
+  canvasHeight = fullCanvas.height,
+  plays = 0, // repeat forever
+  frames = Vector(first, cursor)
+).toOption.get
+
+val bytes = Png.encodeAnimation(animation).toOption.get
+```
+
+The smart constructors reject rectangles outside the canvas, unsigned fields outside their wire
+ranges, an incomplete first fallback frame, and PREVIOUS disposal on the first frame. The encoder
+then assigns one continuous sequence across every fcTL and fdAT chunk. IDAT belongs only to the first
+frame; later frames use fdAT, whose first four bytes are the sequence number.
+
+The [APNG specification](https://wiki.mozilla.org/APNG_Specification) defines these additional chunks
+and the exact ordering rules. Static PNG structure still follows
+[PNG Third Edition](https://www.w3.org/TR/png-3/).
