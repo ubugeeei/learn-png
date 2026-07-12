@@ -163,9 +163,9 @@ private[png] object Codec:
       _ <- Either.cond(signature.toVector == Signature, (), InvalidSignature(signature.toVector))
       chunks <- parseChunks(cursor, options)
       _ <- Either.cond(cursor.remaining == 0, (), TrailingData(cursor.remaining))
-      _ <- validateOrder(chunks)
+      _ <- ChunkValidation.validate(chunks)
       header <- Header.parse(chunks.head.data)
-      _ <- validateAncillary(chunks, header)
+      _ <- ChunkValidation.validateAncillary(chunks, header)
       _ <- within("width", header.width, options.maximumWidth)
       _ <- within("height", header.height, options.maximumHeight)
       _ <- within("pixels", header.width.toLong * header.height, options.maximumPixels)
@@ -173,9 +173,9 @@ private[png] object Codec:
 
   private def decodeChunks(chunks: Vector[Chunk], options: DecoderOptions): Either[PngError, Image] =
     for
-      _ <- validateOrder(chunks)
+      _ <- ChunkValidation.validate(chunks)
       header <- Header.parse(chunks.head.data)
-      _ <- validateAncillary(chunks, header)
+      _ <- ChunkValidation.validateAncillary(chunks, header)
       _ <- within("width", header.width, options.maximumWidth)
       _ <- within("height", header.height, options.maximumHeight)
       _ <- within("pixels", header.width.toLong * header.height, options.maximumPixels)
@@ -287,64 +287,6 @@ private[png] object Codec:
           decoded <- Samples.decodeRow(row, width, header, palette, transparency)
         yield (pixels ++ decoded, row)
     .map(_._1)
-
-  private def validateOrder(chunks: Vector[Chunk]): Either[PngError, Unit] =
-    val names = chunks.map(_.chunkType)
-    val idatIndices = names.zipWithIndex
-      .collect { case (ChunkType.IDAT, index) =>
-        index
-      }
-    val unknownCritical = chunks.find(chunk =>
-      !chunk.chunkType.isAncillary &&
-        !Set(ChunkType.IHDR, ChunkType.PLTE, ChunkType.IDAT, ChunkType.IEND)(chunk.chunkType)
-    )
-    if names.headOption != Some(ChunkType.IHDR) then Left(InvalidChunkOrder("IHDR must be first"))
-    else if names.count(_ == ChunkType.IHDR) != 1 then Left(InvalidChunkOrder("exactly one IHDR is required"))
-    else if names.lastOption != Some(ChunkType.IEND) || names.count(_ == ChunkType.IEND) != 1 then
-      Left(InvalidChunkOrder("IEND must occur exactly once and last"))
-    else if chunks.last.length != 0 then Left(InvalidChunkLength("IEND", chunks.last.length))
-    else if idatIndices.isEmpty then Left(InvalidChunkOrder("at least one IDAT is required"))
-    else if idatIndices != (idatIndices.head to idatIndices.last).toVector then
-      Left(InvalidChunkOrder("IDAT chunks must be consecutive"))
-    else if names.count(_ == ChunkType.PLTE) > 1 then Left(InvalidChunkOrder("PLTE may occur at most once"))
-    else if names.indexOf(ChunkType.PLTE) > idatIndices.head then
-      Left(InvalidChunkOrder("PLTE must precede IDAT"))
-    else
-      unknownCritical.fold[Either[PngError, Unit]](Right(()))(chunk =>
-        Left(UnsupportedFeature(s"critical chunk ${chunk.chunkType.name}"))
-      )
-
-  /** Validate color-type-specific ancillary constraints from PNG chapter 11. */
-  private def validateAncillary(chunks: Vector[Chunk], header: Header): Either[PngError, Unit] =
-    val names = chunks.map(_.chunkType)
-    val idat = names.indexOf(ChunkType.IDAT)
-    val palette = names.indexOf(ChunkType.PLTE)
-    val transparency = chunks.filter(_.chunkType == ChunkType.tRNS)
-    val singleton = Vector(ChunkType.tRNS, ChunkType.gAMA, ChunkType.sRGB, ChunkType.pHYs)
-
-    def occursBefore(kind: ChunkType, boundary: Int): Boolean =
-      val index = names.indexOf(kind)
-      index < 0 || index < boundary
-
-    val colorBoundary = if palette >= 0 then palette else idat
-    if singleton.exists(kind => names.count(_ == kind) > 1) then
-      Left(InvalidChunkOrder("tRNS, gAMA, sRGB, and pHYs may occur at most once"))
-    else if !occursBefore(ChunkType.gAMA, colorBoundary) || !occursBefore(ChunkType.sRGB, colorBoundary)
-    then Left(InvalidChunkOrder("gAMA and sRGB must precede PLTE and IDAT"))
-    else if !occursBefore(ChunkType.pHYs, idat) || !occursBefore(ChunkType.tRNS, idat) then
-      Left(InvalidChunkOrder("pHYs and tRNS must precede IDAT"))
-    else if transparency.nonEmpty &&
-      Set(ColorType.GrayscaleAlpha, ColorType.TruecolorAlpha)(header.colorType)
-    then Left(InvalidImage(s"tRNS is forbidden for color type ${header.colorType.code}"))
-    else
-      transparency.headOption match
-        case Some(chunk) if header.colorType == ColorType.Grayscale && chunk.length != 2 =>
-          Left(InvalidChunkLength("tRNS", chunk.length))
-        case Some(chunk) if header.colorType == ColorType.Truecolor && chunk.length != 6 =>
-          Left(InvalidChunkLength("tRNS", chunk.length))
-        case Some(chunk) if header.colorType == ColorType.Indexed && chunk.length == 0 =>
-          Left(InvalidChunkLength("tRNS", chunk.length))
-        case _ => Right(())
 
   private def errorMessage(error: Throwable): String = Option(error.getMessage).getOrElse(
     error.getClass.getSimpleName
