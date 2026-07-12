@@ -55,6 +55,7 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 12. [Metadata without silent data loss](08-production/01-metadata-and-transcoding.md)
 13. [I/O and resource contracts](08-production/02-io-and-resource-contracts.md)
 14. [Color numbers are not yet appearance](08-production/03-color-management.md)
+15. [Backgrounds, palettes, and compressed text](08-production/04-palettes-background-and-text.md)
 
 ## Part 9 — Conformance
 

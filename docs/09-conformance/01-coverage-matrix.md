@@ -58,12 +58,12 @@ Status meanings:
 | Chunk | Decode | Encode | Notes |
 |---|:---:|:---:|---|
 | tEXt | ✅ | ✅ | Latin-1 keyword/value validation |
-| zTXt | ❌ | ❌ | compressed Latin-1 text required |
+| zTXt | ✅ | ✅ | bounded strict zlib and Latin-1 keyword/value model |
 | iTXt | ✅ | ✅ | UTF-8, language tag, translated keyword; compressed input accepted |
-| bKGD | ❌ | ❌ | color-type-dependent representation required |
-| hIST | ❌ | ❌ | palette-dependent histogram required |
+| bKGD | ✅ | 🟡 | all forms decode; encode requires compatibility with output color type |
+| hIST | ✅ | 🟡 | PLTE count validated; RGBA document output cannot carry hIST |
 | pHYs | ✅ | ✅ | unitless and pixels-per-metre forms |
-| sPLT | ❌ | ❌ | repeated named suggested palettes required |
+| sPLT | ✅ | ✅ | repeated unique names and 8/16-bit entries |
 | eXIf | ✅ | ✅ | opaque profile preserved with defensive copying |
 | tIME | ✅ | ✅ | calendar fields validated through `LocalDateTime` |
 
