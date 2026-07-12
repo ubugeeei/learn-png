@@ -14,9 +14,23 @@ Round trips are broad but not sufficient: an encoder and decoder can agree on th
 
 ## Independent interoperability
 
-The suite feeds encoded output to Java ImageIO and compares a selected ARGB pixel. This provides an
-implementation independent of our parser. A larger conformance suite can use the
-[PngSuite corpus](http://www.schaik.com/pngsuite/) and compare every pixel.
+The suite feeds encoded output to Java ImageIO and compares pixels. This provides an implementation
+independent of our parser.
+
+## Run an external format corpus
+
+The repository vendors the 15 basic images from
+[Willem van Schaik's PngSuite](https://www.schaik.com/pngsuite/). Together they exercise every legal
+color type and bit-depth combination from 1-bit grayscale through 16-bit RGBA. Each fixture must
+decode through both the convenient 8-bit API and the lossless 16-bit API.
+
+For fixtures where Java ImageIO exposes stored samples directly, the test compares every ARGB pixel.
+ImageIO applies color conversion or different 16-to-8 rounding to some grayscale, alpha, and 16-bit
+fixtures. Comparing ARGB there would test presentation policy rather than parsing, so those cases
+receive independent dimension checks and lossless decoder coverage instead.
+
+Fixtures live in `testdata/pngsuite`, next to the upstream permission notice. Keeping them in the
+repository makes CI deterministic and avoids trusting a live download server during every run.
 
 ## Mutation tests
 
@@ -44,4 +58,3 @@ the API contract.
 - Unknown critical chunks fail; unknown ancillary chunks do not.
 - IDAT chunks are consecutive and treated as one zlib stream.
 - No implementation file grows beyond the project's roughly 350-line review budget.
-

@@ -85,8 +85,8 @@ Status meanings:
 | Caller-owned stream lifetime | ✅ | consume/flush, never close |
 | Transactional path replacement | ✅ | forced temporary sibling and atomic move preference |
 | Property-based tests | 🟡 | filters and chunks; sample packing and Adam7 byte streams need generators |
-| Independent decoder interoperability | 🟡 | Java ImageIO smoke test only |
-| PNGSuite corpus | ❌ | positive and intentionally-invalid corpus integration required |
+| Independent decoder interoperability | 🟡 | Java ImageIO full-raster checks for directly comparable samples |
+| PNGSuite corpus | 🟡 | all 15 basic color/depth fixtures; larger positive and invalid sets remain |
 | Fuzzing | ❌ | coverage-guided fuzz target required |
 | Benchmarks | ❌ | throughput and allocation baselines required |
 | Published binary/API compatibility | ❌ | no artifact versioning or MiMa policy yet |
