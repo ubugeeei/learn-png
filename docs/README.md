@@ -30,16 +30,33 @@ normative links, executable tests, and a path from one red pixel to a hardened c
 
 6. [Types as format rules](03-scala-design/01-types-as-format-rules.md)
 
+## Part 4 — Chunks
+
+7. [Length, type, data, and CRC](04-chunks/01-length-type-data-crc.md)
+8. [Type bits and datastream ordering](04-chunks/02-type-bits-and-ordering.md)
+
+## Part 5 — Scanline transformation
+
+9. [Filters as reversible predictors](05-filters/01-reversible-predictors.md)
+
+## Part 6 — Decoding
+
+10. [From bytes to pixels](06-decoder/01-from-bytes-to-pixels.md)
+
+## Part 7 — Interlacing
+
+11. [Deriving Adam7](07-interlace/01-derive-adam7.md)
+
 ## Original implementation notes
 
-7. [A map of the format](01-format-map.md)
-8. [Binary values, chunks, and CRC-32](02-binary-and-chunks.md)
-9. [The image model, color types, and IHDR](03-image-and-header.md)
-10. [Scanline filters and zlib](04-filters-and-compression.md)
-11. [Encoding step by step](05-encoding.md)
-12. [Defensive decoding](06-decoding.md)
-13. [Adam7](07-adam7.md)
-14. [Testing a binary format](08-testing.md)
+12. [A map of the format](01-format-map.md)
+13. [Binary values, chunks, and CRC-32](02-binary-and-chunks.md)
+14. [The image model, color types, and IHDR](03-image-and-header.md)
+15. [Scanline filters and zlib](04-filters-and-compression.md)
+16. [Encoding step by step](05-encoding.md)
+17. [Defensive decoding](06-decoding.md)
+18. [Adam7](07-adam7.md)
+19. [Testing a binary format](08-testing.md)
 
 Each chapter follows the same loop: read the relevant requirement, model its invariants, implement
 the smallest useful unit, and test both valid and hostile input.

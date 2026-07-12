@@ -1,7 +1,7 @@
 # 2. Binary Values and Chunks
 
 Read [PNG integers and byte order](https://www.w3.org/TR/png-3/#7Integers-and-byte-order), then
-[`Binary.scala`](../src/png/binary/Binary.scala). PNG uses unsigned integers, while the JVM's
+[`Binary.scala`](https://github.com/ubugeeei/learn-png/blob/main/src/png/binary/Binary.scala). PNG uses unsigned integers, while the JVM's
 integer types are signed. The representation strategy is simple:
 
 - store `uint8` in an `Int`;
