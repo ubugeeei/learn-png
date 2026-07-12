@@ -62,7 +62,8 @@ export default withMermaid(defineConfig({
         text: "Production boundaries",
         items: [
           { text: "Metadata and transcoding", link: "/08-production/01-metadata-and-transcoding" },
-          { text: "I/O and resource contracts", link: "/08-production/02-io-and-resource-contracts" }
+          { text: "I/O and resource contracts", link: "/08-production/02-io-and-resource-contracts" },
+          { text: "Color management", link: "/08-production/03-color-management" }
         ]
       },
       {

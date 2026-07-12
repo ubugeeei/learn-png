@@ -44,14 +44,14 @@ Status meanings:
 
 | Chunk | Decode | Encode | Notes |
 |---|:---:|:---:|---|
-| cHRM | ❌ | ❌ | chromaticity model required |
+| cHRM | ✅ | ✅ | fixed-point white point and RGB primaries |
 | gAMA | ✅ | ✅ | validated positive fixed-point value |
-| iCCP | ❌ | ❌ | profile name, zlib profile, conflict rules required |
-| sBIT | ❌ | ❌ | color-type-dependent lengths required |
+| iCCP | ✅ | ✅ | named, bounded zlib profile with immutable bytes |
+| sBIT | ✅ | ✅ | color-type-dependent lengths and depths validated |
 | sRGB | ✅ | ✅ | all four rendering intents |
-| cICP | ❌ | ❌ | Third Edition video/HDR code points required |
-| mDCV | ❌ | ❌ | mastering display volume model required |
-| cLLI | ❌ | ❌ | content light level model required |
+| cICP | ✅ | ✅ | code points and full-range flag |
+| mDCV | ✅ | ✅ | mastering primaries, white point, luminance extrema |
+| cLLI | ✅ | ✅ | maximum content and frame-average light levels |
 
 ## Text, physical, and editing information
 
